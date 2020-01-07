@@ -51,11 +51,13 @@ DaemonSet found in extensions/v1beta1
 
 ```
 
+**WARNING** - kubepug doesn't support API walking yet. This means that its recommended first to run kubepug with previous kubernetes versions (as --k8s-version=v1.15.0, --k8s-version=v1.16.0) before trying to run directly against the latest version. Verifying all the existing objects against the latest swagger.json will be supported in a future release
 
 ## Screenshot
 ![Kubepug](assets/screenshot.png)
 
 ## Todo
+* Add Reverse / Stressful testing - kubepug checks deprecated APIs from swagger.json file to verify if there's some 'to be DEPRECATED' API. But when there's an already removed API it cannot find. So Reverse will walk through all the objects from the API Server (or at least those containing items) and check if that API still exists in future swagger.json. This might be API intensive!!
 * Add some Unit Tests
 * Turn this into a kubectl plugin :)
 
