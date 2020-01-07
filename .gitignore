@@ -5,7 +5,7 @@
 *.so
 *.dylib
 files/*
-
+swagger-*
 # Test binary, built with `go test -c`
 *.test
 

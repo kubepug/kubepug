@@ -18,14 +18,15 @@ var (
 var (
 	k8sVersion      string
 	forceDownload   bool
+	apiWalk         bool
 	swaggerDir      string
 	showDescription bool
 
 	rootCmd = &cobra.Command{
-		Use:          "kubectl pug",
+		Use:          "kubepug",
 		SilenceUsage: true,
 		Short:        "Verifies objects in deprecated APIs against a swagger.json from Kubernetes. It must run with a Cluster Admin account as it checks all the Cluster Objects",
-		Example:      "  kubectl pug",
+		Example:      "  kubepug",
 		Args:         cobra.MinimumNArgs(0),
 		RunE:         runPug,
 	}
@@ -69,6 +70,7 @@ func init() {
 	rootCmd.Flags().MarkHidden("token")
 	rootCmd.Flags().MarkHidden("user")
 
+	rootCmd.PersistentFlags().BoolVar(&apiWalk, "api-walk", true, "Wether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer. Defaults to true")
 	rootCmd.PersistentFlags().BoolVar(&showDescription, "description", true, "Wether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true")
 	rootCmd.PersistentFlags().StringVar(&k8sVersion, "k8s-version", "master", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
 	rootCmd.PersistentFlags().StringVar(&swaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. Defaults to current directory")
