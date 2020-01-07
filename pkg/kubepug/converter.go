@@ -27,38 +27,99 @@ func getGroupVersionKind(value map[string]interface{}) (group, version, kind str
 	return group, version, kind
 }
 
-func getDeprecatedValues(value map[string]interface{}) (DeprecatedAPI, bool) {
-	var valid bool
-	var description, group, version, kind string
+func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAPI, bool) {
+	var valid, deprecated bool
+	var description, group, version, kind, resourceName string
+
+	disco, err := discovery.NewDiscoveryClientForConfig(config)
+
+	if err != nil {
+		panic(err)
+	}
+
 	for k, v := range value {
 		if valString, ok := v.(string); k == "description" && ok {
 			if strings.Contains(strings.ToLower(valString), "deprecated") {
-				description = valString
+				deprecated = true
 			}
+			description = valString
 		}
-		// Just set something deprecated if it has x-kubernetes-group-version-kind also
+
+		// Just set something as a valid API if it has x-kubernetes-group-version-kind also
 		if k == "x-kubernetes-group-version-kind" {
 			valid = true
 			// GroupVersionKind is an array of one value only
 			gvkMap := v.([]interface{})[0]
 			group, version, kind = getGroupVersionKind(gvkMap.(map[string]interface{}))
+
+			resourceName = DiscoverResourceName(disco, group, version, kind)
+
+			if resourceName = DiscoverResourceName(disco, group, version, kind); resourceName == "" {
+				// If no ResourceName is found in the API Server this Resource does not exists and should
+				// be ignored
+				valid = false
+			}
 		}
 	}
-	if description != "" && valid {
-		return DeprecatedAPI{
+	if valid {
+		return KubeAPI{
 			description: description,
 			group:       group,
 			kind:        kind,
 			version:     version,
+			name:        resourceName,
+			deprecated:  deprecated,
 		}, true
 	}
 
-	return DeprecatedAPI{}, false
+	return KubeAPI{}, false
+}
+
+// PopulateKubeAPIMap Converts an API Definition into a map of KubeAPIs["group/version/name"]
+func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[string]KubeAPI) {
+
+	KubeAPIs = make(map[string]KubeAPI)
+
+	// Open our jsonFile
+	jsonFile, err := os.Open(swaggerfile)
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// read our opened xmlFile as a byte array.
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	jsonFile.Close()
+
+	json.Unmarshal(byteValue, &definitionsMap)
+
+	definitions := definitionsMap["definitions"].(map[string]interface{})
+
+	for _, value := range definitions {
+		val := value.(map[string]interface{})
+		if kubeapivalue, valid := getKubeAPIValues(val, config); valid {
+			var name string
+			if kubeapivalue.group != "" {
+				name = fmt.Sprintf("%s/%s/%s", kubeapivalue.group, kubeapivalue.version, kubeapivalue.name)
+			} else {
+				name = fmt.Sprintf("%s/%s", kubeapivalue.version, kubeapivalue.name)
+			}
+			//			fmt.Printf("%v\n", kubeapivalue)
+			KubeAPIs[name] = kubeapivalue
+		}
+	}
+	return KubeAPIs
 }
 
 // DiscoverResourceName provides a Resource Name based in its Group, Version and Kind
 func DiscoverResourceName(client *discovery.DiscoveryClient, group, version, kind string) string {
-	gv := fmt.Sprintf("%s/%s", group, version)
+	var gv string
+	if group != "" {
+		gv = fmt.Sprintf("%s/%s", group, version)
+	} else {
+		gv = fmt.Sprintf("%s", version)
+	}
 	resources, err := client.ServerResourcesForGroupVersion(gv)
 	if err != nil {
 		return ""
@@ -69,49 +130,4 @@ func DiscoverResourceName(client *discovery.DiscoveryClient, group, version, kin
 		}
 	}
 	return ""
-}
-
-// DeprecatedAPIs receives a file location and Kubernetes Config 
-// and returns a map of deprecated APIs to the main program
-func DeprecatedAPIs(config *rest.Config, swaggerfile string) (deprecatedApis map[string]DeprecatedAPI) {
-
-	// Open our jsonFile
-	jsonFile, err := os.Open(swaggerfile)
-	// if we os.Open returns an error then handle it
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-
-	// read our opened xmlFile as a byte array.
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	// we unmarshal our byteArray which contains our
-	// jsonFile's content into 'users' which we defined above
-
-	json.Unmarshal(byteValue, &definitionsMap)
-
-	deprecatedApis = make(map[string]DeprecatedAPI)
-	definitions := definitionsMap["definitions"].(map[string]interface{})
-
-	for key, value := range definitions {
-		val := value.(map[string]interface{})
-		if deprecatedAPI, deprecated := getDeprecatedValues(val); deprecated {
-			disco, err := discovery.NewDiscoveryClientForConfig(config)
-			if err != nil {
-				panic(err)
-			}
-			resource := DiscoverResourceName(disco, deprecatedAPI.group, deprecatedAPI.version, deprecatedAPI.kind)
-			deprecatedApis[key] = DeprecatedAPI{
-				group:       deprecatedAPI.group,
-				kind:        deprecatedAPI.kind,
-				description: deprecatedAPI.description,
-				name:        resource,
-				version:     deprecatedAPI.version,
-			}
-		}
-	}
-
-	return deprecatedApis
 }

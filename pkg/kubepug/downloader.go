@@ -1,7 +1,6 @@
 package kubepug
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,8 +18,7 @@ func downloadFile(filename, url string) error {
 		return err
 	}
 	if resp.StatusCode > 305 {
-		errMsg := fmt.Sprintf("Could not download the swagger file %s", url)
-		return errors.New(errMsg)
+		return fmt.Errorf("Could not download the swagger file %s", url)
 	}
 	defer resp.Body.Close()
 
@@ -48,7 +46,7 @@ func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename strin
 	}
 	dir, err := os.Stat(swaggerdir)
 	if os.IsNotExist(err) || !dir.IsDir() {
-		return "", errors.New("Swagger Directory does not exist or is already created as a file")
+		return "", fmt.Errorf("Directory %s does not exist or is already created as a file", swaggerdir)
 	}
 
 	filename = fmt.Sprintf("%s/swagger-%s.json", swaggerdir, version)
@@ -65,8 +63,7 @@ func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename strin
 	}
 
 	if fileExists.IsDir() {
-		errorMsg := fmt.Sprintf("%s already exists as a directory", filename)
-		return "", errors.New(errorMsg)
+		return "", fmt.Errorf("%s already exists as a directory", filename)
 	}
 
 	return filename, nil

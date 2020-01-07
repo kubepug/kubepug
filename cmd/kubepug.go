@@ -31,6 +31,7 @@ var (
 		RunE:         runPug,
 	}
 )
+var KubernetesAPIs map[string]kubepug.KubeAPI
 
 func runPug(cmd *cobra.Command, args []string) error {
 
@@ -45,10 +46,15 @@ func runPug(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deprecatedapis := make(map[string]kubepug.DeprecatedAPI)
-	deprecatedapis = kubepug.DeprecatedAPIs(config, swaggerfile)
+	KubernetesAPIs = make(map[string]kubepug.KubeAPI)
+	KubernetesAPIs = kubepug.PopulateKubeAPIMap(config, swaggerfile)
 
-	kubepug.ListDeprecated(config, deprecatedapis, showDescription)
+	// First lets List all the deprecated APIs
+	kubepug.ListDeprecated(config, KubernetesAPIs, showDescription)
+
+	if apiWalk {
+		kubepug.WalkObjects(config, KubernetesAPIs)
+	}
 
 	return nil
 
