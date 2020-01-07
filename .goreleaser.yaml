@@ -1,0 +1,27 @@
+project_name: kubepug
+release:
+  github:
+    owner: rikatz
+    name: kubepug
+builds:
+  - id: kubepug
+    goos:
+    - linux
+    - windows
+    - darwin
+    goarch:
+    - amd64
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+      - GOPROXY=https://proxy.golang.org
+    main: cmd/kubepug.go
+archives:
+  - id: kubepug
+    builds:
+    - kubepug
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz
+    format_overrides:
+    - goos: windows
+      format: zip
