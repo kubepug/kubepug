@@ -1,4 +1,5 @@
 # KubePug - Pre UpGrade (Checker)
+[![DepShield Badge](https://depshield.sonatype.org/badges/rikatz/kubepug/depshield.svg)](https://depshield.github.io)
 
 
 ![Kubepug](assets/kubepug.png)
@@ -50,8 +51,6 @@ DaemonSet found in extensions/v1beta1
                 -> Object: kube-proxy namespace: kube-system
 
 ```
-
-**WARNING** - kubepug doesn't support API walking yet. This means that its recommended first to run kubepug with previous kubernetes versions (as --k8s-version=v1.15.0, --k8s-version=v1.16.0) before trying to run directly against the latest version. Verifying all the existing objects against the latest swagger.json will be supported in a future release
 
 ## Screenshot
 ![Kubepug](assets/screenshot.png)
