@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// WalkObjects walk through Kubernetes API and verifies which Resources doesn't exists anymore in swagger.json
 func WalkObjects(config *rest.Config, KubernetesAPIs map[string]KubeAPI) {
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
@@ -29,9 +30,9 @@ func WalkObjects(config *rest.Config, KubernetesAPIs map[string]KubeAPI) {
 	}
 
 	for _, resourceGroupVersion := range resourcesList {
-		//fmt.Printf("%s\n\n", v.GroupVersion)
-		for _, resource := range resourceGroupVersion.APIResources {
 
+		for i := range resourceGroupVersion.APIResources {
+			resource := &resourceGroupVersion.APIResources[i]
 			// If this is a subObject (like pods/status) we will disconsider this
 			if len(strings.Split(resource.Name, "/")) == 1 {
 
