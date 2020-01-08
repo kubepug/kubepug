@@ -52,8 +52,6 @@ func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAP
 			gvkMap := v.([]interface{})[0]
 			group, version, kind = getGroupVersionKind(gvkMap.(map[string]interface{}))
 
-			resourceName = DiscoverResourceName(disco, group, version, kind)
-
 			if resourceName = DiscoverResourceName(disco, group, version, kind); resourceName == "" {
 				// If no ResourceName is found in the API Server this Resource does not exists and should
 				// be ignored
@@ -76,7 +74,7 @@ func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAP
 }
 
 // PopulateKubeAPIMap Converts an API Definition into a map of KubeAPIs["group/version/name"]
-func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[string]KubeAPI) {
+func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[string]KubeAPI, err error) {
 
 	KubeAPIs = make(map[string]KubeAPI)
 
@@ -84,15 +82,21 @@ func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[s
 	jsonFile, err := os.Open(swaggerfile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		fmt.Println(err)
+		return KubeAPIs, err
 	}
 
 	// read our opened xmlFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
-	jsonFile.Close()
+	err = jsonFile.Close()
+	if err != nil {
+		return KubeAPIs, err
+	}
 
-	json.Unmarshal(byteValue, &definitionsMap)
+	err = json.Unmarshal(byteValue, &definitionsMap)
+	if err != nil {
+		return KubeAPIs, err
+	}
 
 	definitions := definitionsMap["definitions"].(map[string]interface{})
 
@@ -105,11 +109,10 @@ func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[s
 			} else {
 				name = fmt.Sprintf("%s/%s", kubeapivalue.version, kubeapivalue.name)
 			}
-			//			fmt.Printf("%v\n", kubeapivalue)
 			KubeAPIs[name] = kubeapivalue
 		}
 	}
-	return KubeAPIs
+	return KubeAPIs, nil
 }
 
 // DiscoverResourceName provides a Resource Name based in its Group, Version and Kind
@@ -118,13 +121,14 @@ func DiscoverResourceName(client *discovery.DiscoveryClient, group, version, kin
 	if group != "" {
 		gv = fmt.Sprintf("%s/%s", group, version)
 	} else {
-		gv = fmt.Sprintf("%s", version)
+		gv = version
 	}
 	resources, err := client.ServerResourcesForGroupVersion(gv)
 	if err != nil {
 		return ""
 	}
-	for _, apires := range resources.APIResources {
+	for i := range resources.APIResources {
+		apires := &resources.APIResources[i]
 		if apires.Kind == kind {
 			return apires.Name
 		}

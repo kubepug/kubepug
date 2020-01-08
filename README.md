@@ -1,5 +1,6 @@
 # KubePug - Pre UpGrade (Checker)
-[![DepShield Badge](https://depshield.sonatype.org/badges/rikatz/kubepug/depshield.svg)](https://depshield.github.io)
+[![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/rikatz/kubepug/?ref=repository-badge)
+[![codebeat badge](https://codebeat.co/badges/6613fe8d-da81-42be-bb35-8094557a627d)](https://codebeat.co/projects/github-com-rikatz-kubepug-master)
 
 
 ![Kubepug](assets/kubepug.png)

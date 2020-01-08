@@ -47,7 +47,11 @@ func runPug(cmd *cobra.Command, args []string) error {
 	}
 
 	KubernetesAPIs = make(map[string]kubepug.KubeAPI)
-	KubernetesAPIs = kubepug.PopulateKubeAPIMap(config, swaggerfile)
+	KubernetesAPIs, err = kubepug.PopulateKubeAPIMap(config, swaggerfile)
+
+	if err != nil {
+		return err
+	}
 
 	// First lets List all the deprecated APIs
 	kubepug.ListDeprecated(config, KubernetesAPIs, showDescription)
@@ -63,18 +67,18 @@ func runPug(cmd *cobra.Command, args []string) error {
 func init() {
 	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(rootCmd.Flags())
-	rootCmd.Flags().MarkHidden("as")
-	rootCmd.Flags().MarkHidden("as-group")
-	rootCmd.Flags().MarkHidden("cache-dir")
-	rootCmd.Flags().MarkHidden("certificate-authority")
-	rootCmd.Flags().MarkHidden("client-certificate")
-	rootCmd.Flags().MarkHidden("client-key")
-	rootCmd.Flags().MarkHidden("insecure-skip-tls-verify")
-	rootCmd.Flags().MarkHidden("namespace")
-	rootCmd.Flags().MarkHidden("request-timeout")
-	rootCmd.Flags().MarkHidden("server")
-	rootCmd.Flags().MarkHidden("token")
-	rootCmd.Flags().MarkHidden("user")
+	rootCmd.Flags().MarkHidden("as")                       // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("as-group")                 // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("cache-dir")                // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("certificate-authority")    // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("client-certificate")       // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("client-key")               // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("insecure-skip-tls-verify") // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("namespace")                // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("request-timeout")          // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("server")                   // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("token")                    // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("user")                     // Ignoring error in deepsource. skipcq: GSC-G104
 
 	rootCmd.PersistentFlags().BoolVar(&apiWalk, "api-walk", true, "Wether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer. Defaults to true")
 	rootCmd.PersistentFlags().BoolVar(&showDescription, "description", true, "Wether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true")
