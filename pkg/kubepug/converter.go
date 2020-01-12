@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
 )
@@ -37,28 +38,31 @@ func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAP
 		panic(err)
 	}
 
-	for k, v := range value {
-		if valString, ok := v.(string); k == "description" && ok {
-			if strings.Contains(strings.ToLower(valString), "deprecated") {
-				deprecated = true
-			}
-			description = valString
-		}
+	gvk, valid, err := unstructured.NestedSlice(value, "x-kubernetes-group-version-kind")
 
-		// Just set something as a valid API if it has x-kubernetes-group-version-kind also
-		if k == "x-kubernetes-group-version-kind" {
-			valid = true
-			// GroupVersionKind is an array of one value only
-			gvkMap := v.([]interface{})[0]
-			group, version, kind = getGroupVersionKind(gvkMap.(map[string]interface{}))
-
-			if resourceName = DiscoverResourceName(disco, group, version, kind); resourceName == "" {
-				// If no ResourceName is found in the API Server this Resource does not exists and should
-				// be ignored
-				valid = false
-			}
-		}
+	if !valid || err != nil {
+		return KubeAPI{}, false
 	}
+
+	gvkMap := gvk[0]
+	group, version, kind = getGroupVersionKind(gvkMap.(map[string]interface{}))
+
+	if resourceName = DiscoverResourceName(disco, group, version, kind); resourceName == "" {
+		// If no ResourceName is found in the API Server this Resource does not exists and should
+		// be ignored
+		valid = false
+	}
+
+	description, found, err := unstructured.NestedString(value, "description")
+
+	if !found || err != nil {
+		return KubeAPI{}, false
+	}
+
+	if strings.Contains(strings.ToLower(description), "deprecated") {
+		deprecated = true
+	}
+
 	if valid {
 		return KubeAPI{
 			description: description,
