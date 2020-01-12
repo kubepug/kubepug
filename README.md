@@ -1,19 +1,16 @@
-# KubePug - Pre UpGrade (Checker)
+# Deprecations  AKA KubePug - Pre UpGrade (Checker)
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/rikatz/kubepug/?ref=repository-badge)
 [![codebeat badge](https://codebeat.co/badges/6613fe8d-da81-42be-bb35-8094557a627d)](https://codebeat.co/projects/github-com-rikatz-kubepug-master)
 
 
 ![Kubepug](assets/kubepug.png)
 
-This is a WIP. 
-
-
-KubePug is intended to be a kubectl plugin, which:
+KubePug/Deprecations is intended to be a kubectl plugin, which:
 
 * Downloads a swagger.json from a specific Kubernetes version
 * Parses this Json finding deprecation notices
 * Verifies the current kubernetes cluster checking wether exists objects in this deprecated API Versions, allowing the user to check before migrating
-* Helps Katz to be a better developer (nooot!!)
+* Helps Katz to be a better developer
 
 ## How to Use
 
