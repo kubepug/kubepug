@@ -18,7 +18,7 @@ func downloadFile(filename, url string) error {
 		return err
 	}
 	if resp.StatusCode > 305 {
-		return fmt.Errorf("Could not download the swagger file %s", url)
+		return fmt.Errorf("dould not download the swagger file %s", url)
 	}
 	defer resp.Body.Close()
 
@@ -46,7 +46,7 @@ func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename strin
 	}
 	dir, err := os.Stat(swaggerdir)
 	if os.IsNotExist(err) || !dir.IsDir() {
-		return "", fmt.Errorf("Directory %s does not exist or is already created as a file", swaggerdir)
+		return "", fmt.Errorf("directory %s does not exist or is already created as a file", swaggerdir)
 	}
 
 	filename = fmt.Sprintf("%s/swagger-%s.json", swaggerdir, version)
