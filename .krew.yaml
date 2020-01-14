@@ -1,0 +1,56 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: pug               # plugin name must match your manifest file name (e.g. foo.yaml)
+spec:
+  shortDescription: >-    # short description gets truncated at ~50 chars
+    Checks existing deprecated objects in a cluster 
+  # (optional) url of the project homepage
+  homepage: https://github.com/rikatz/kubepug
+  # (optional) use caveats field to show post-installation recommendations
+  caveats: |
+    * Kubepug downloads Kubernetes swagger.json to check objects and which are deprecated  
+    according to its description. It uses by default "master" branch and should be changed 
+    to the desired Kubernetes version with the flag --k8s-version
+  description: |     
+    This plugin shows all the deprecated objects in a Kubernetes cluster allowing the operator
+    to verify them before upgrading the cluster. It uses the swagger.json version available in
+    master branch of Kubernetes repository (github.com/kuebrnetes/kubernetes) as a reference. 
+    The branch might be changed to some other desired Kubernetes version
+  version: "v0.1.1"
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    uri: https://github.com/rikatz/kubepug/releases/download/v0.1.1/kubepug_darwin_amd64.tar.gz
+    # sha256sum of the above archive file:
+    sha256: "1b260efaae69133474b049c1b6ab42b606211deb139078d3a386085aa9a3e092"
+    files:
+    - from: "*"
+      to: "."
+    bin: "kubepug" 
+  - selector:             # a regular Kubernetes selector
+      matchLabels:
+        os: linux
+        arch: amd64
+    # url for downloading the package archive:
+    uri: https://github.com/rikatz/kubepug/releases/download/v0.1.1/kubepug_linux_amd64.tar.gz
+    # sha256sum of the above archive file:
+    sha256: "d25e8a055ad535e2e85527dbc19ee900205213e393c468a7c5a1b3d1c5ad7db8"
+    files:
+    - from: "*"
+      to: "."
+    bin: "kubepug" 
+  - selector:             # a regular Kubernetes selector
+      matchLabels:
+        os: windows
+        arch: amd64
+    # url for downloading the package archive:
+    uri: https://github.com/rikatz/kubepug/releases/download/v0.1.1/kubepug_windows_amd64.zip
+    # sha256sum of the above archive file:
+    sha256: "e5e79e2f38d222b6bb0ef7c154be3e02f765cc1396d08a1746e6b1082b4caeeb"
+    files:
+    - from: "*"
+      to: "."
+    bin: "kubepug.exe" 
