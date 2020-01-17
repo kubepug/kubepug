@@ -23,14 +23,16 @@ var (
 	showDescription bool
 
 	rootCmd = &cobra.Command{
-		Use:          "kubepug",
+		Use:          os.Args[0],
 		SilenceUsage: true,
-		Short:        "Verifies objects in deprecated APIs against a swagger.json from Kubernetes. It must run with a Cluster Admin account as it checks all the Cluster Objects",
-		Example:      "  kubepug",
+		Short:        "Shows all the deprecated objects in a Kubernetes cluster allowing the operator to verify them before upgrading the cluster. It uses the swagger.json version available in master branch of Kubernetes repository (github.com/kubernetes/kubernetes) as a reference.",
+		Example:      os.Args[0],
 		Args:         cobra.MinimumNArgs(0),
 		RunE:         runPug,
 	}
 )
+
+// KubernetesAPIs is a map containing a structured version of the Objects of Kubernetes
 var KubernetesAPIs map[string]kubepug.KubeAPI
 
 func runPug(cmd *cobra.Command, args []string) error {
