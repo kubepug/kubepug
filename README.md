@@ -12,7 +12,11 @@ KubePug/Deprecations is intended to be a kubectl plugin, which:
 * Verifies the current kubernetes cluster checking wether exists objects in this deprecated API Versions, allowing the user to check before migrating
 * Helps Katz to be a better developer
 
-## How to Use
+## How to use it as a krew plugin
+
+Just run ``kubectl krew install deprecations``
+
+## How to Use it as a standalone program
 
 Download the correct version from Releases page.
 
@@ -54,10 +58,7 @@ DaemonSet found in extensions/v1beta1
 ![Kubepug](assets/screenshot.png)
 
 ## Todo
-* Add Reverse / Stressful testing - kubepug checks deprecated APIs from swagger.json file to verify if there's some 'to be DEPRECATED' API. But when there's an already removed API it cannot find. So Reverse will walk through all the objects from the API Server (or at least those containing items) and check if that API still exists in future swagger.json. This might be API intensive!!
 * Add some Unit Tests
-* Turn this into a kubectl plugin :)
-
 
 
 
