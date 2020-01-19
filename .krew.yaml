@@ -36,5 +36,5 @@ spec:
       matchLabels:
         os: windows
         arch: amd64
-    {{addURIAndSha "https://github.com/rikatz/kubepug/releases/download/{{ .TagName }}/kubepug_linux_amd64.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/rikatz/kubepug/releases/download/{{ .TagName }}/kubepug_windows_amd64.zip" .TagName }}
     bin: "kubepug.exe" 
