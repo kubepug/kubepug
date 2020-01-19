@@ -3,6 +3,7 @@ package kubepug
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -39,7 +40,7 @@ func downloadFile(filename, url string) error {
 func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename string, err error) {
 
 	if swaggerdir == "" {
-		swaggerdir, err = os.Getwd()
+		swaggerdir, err = ioutil.TempDir("", "kubepug")
 		if err != nil {
 			return "", err
 		}
@@ -50,7 +51,6 @@ func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename strin
 	}
 
 	filename = fmt.Sprintf("%s/swagger-%s.json", swaggerdir, version)
-
 	fileExists, err := os.Stat(filename)
 
 	if os.IsNotExist(err) || (force && !fileExists.IsDir()) {
