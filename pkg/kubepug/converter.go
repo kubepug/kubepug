@@ -99,6 +99,7 @@ func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[s
 
 	err = json.Unmarshal(byteValue, &definitionsMap)
 	if err != nil {
+		fmt.Println("Error parsing the JSON, file might me invalid")
 		return KubeAPIs, err
 	}
 

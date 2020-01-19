@@ -13,19 +13,20 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func populateCRDGroups(dynClient dynamic.Interface) (crds map[string]struct{}) {
+type crdStruct map[string]struct{}
 
+const crdGroup = "apiextensions.k8s.io"
+
+func (crds crdStruct) populateCRDGroups(dynClient dynamic.Interface, version string) {
 	crdgvr := schema.GroupVersionResource{
-		Group:    "apiextensions.k8s.io",
-		Version:  "v1",
+		Group:    crdGroup,
+		Version:  version,
 		Resource: "customresourcedefinitions",
 	}
 
-	crds = make(map[string]struct{})
-
 	crdList, err := dynClient.Resource(crdgvr).List(metav1.ListOptions{})
 	if apierrors.IsNotFound(err) {
-		return crds
+		return
 	}
 	if err != nil {
 		panic(err)
@@ -44,8 +45,6 @@ func populateCRDGroups(dynClient dynamic.Interface) (crds map[string]struct{}) {
 			crds[group] = empty
 		}
 	}
-
-	return crds
 }
 
 // WalkObjects walk through Kubernetes API and verifies which Resources doesn't exists anymore in swagger.json
@@ -66,7 +65,15 @@ func WalkObjects(config *rest.Config, KubernetesAPIs map[string]KubeAPI) {
 		panic(err)
 	}
 
-	crds := populateCRDGroups(dynClient)
+	var crds crdStruct = make(map[string]struct{})
+
+	// Discovery CRDs versions to populate CRDs
+	for _, resources := range resourcesList {
+		if strings.Contains(resources.GroupVersion, crdGroup) {
+			version := strings.Split(resources.GroupVersion, "/")[1]
+			crds.populateCRDGroups(dynClient, version)
+		}
+	}
 
 	for _, resourceGroupVersion := range resourcesList {
 
@@ -77,7 +84,7 @@ func WalkObjects(config *rest.Config, KubernetesAPIs map[string]KubeAPI) {
 
 		for i := range resourceGroupVersion.APIResources {
 			resource := &resourceGroupVersion.APIResources[i]
-			// We don't want to check CRDs or subObjects (like pods/status)
+			// We don't want to check subObjects (like pods/status)
 			if len(strings.Split(resource.Name, "/")) != 1 {
 				continue
 			}

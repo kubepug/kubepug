@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/rikatz/kubepug/pkg/kubepug"
 	"github.com/spf13/cobra"
@@ -23,10 +25,10 @@ var (
 	showDescription bool
 
 	rootCmd = &cobra.Command{
-		Use:          os.Args[0],
+		Use:          filepath.Base(os.Args[0]),
 		SilenceUsage: true,
 		Short:        "Shows all the deprecated objects in a Kubernetes cluster allowing the operator to verify them before upgrading the cluster. It uses the swagger.json version available in master branch of Kubernetes repository (github.com/kubernetes/kubernetes) as a reference.",
-		Example:      os.Args[0],
+		Example:      filepath.Base(os.Args[0]),
 		Args:         cobra.MinimumNArgs(0),
 		RunE:         runPug,
 	}
@@ -42,7 +44,6 @@ func runPug(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	config, err := kubernetesConfigFlags.ToRESTConfig()
 	if err != nil {
 		return err
@@ -67,6 +68,12 @@ func runPug(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
+	if strings.Contains(filepath.Base(os.Args[0]), "kubectl-deprecations") {
+		cmdValue := "kubectl deprecations"
+		rootCmd.Use = cmdValue
+		rootCmd.Example = cmdValue
+	}
+
 	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(rootCmd.Flags())
 	rootCmd.Flags().MarkHidden("as")                       // Ignoring error in deepsource. skipcq: GSC-G104
