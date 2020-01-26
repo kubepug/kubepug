@@ -34,10 +34,9 @@ var (
 	}
 )
 
-// KubernetesAPIs is a map containing a structured version of the Objects of Kubernetes
-var KubernetesAPIs map[string]kubepug.KubeAPI
-
 func runPug(cmd *cobra.Command, args []string) error {
+
+	var KubernetesAPIs kubepug.KubernetesAPIs = make(kubepug.KubernetesAPIs)
 
 	swaggerfile, err := kubepug.DownloadSwaggerFile(k8sVersion, swaggerDir, forceDownload)
 
@@ -49,18 +48,17 @@ func runPug(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	KubernetesAPIs = make(map[string]kubepug.KubeAPI)
-	KubernetesAPIs, err = kubepug.PopulateKubeAPIMap(config, swaggerfile)
+	err = KubernetesAPIs.PopulateKubeAPIMap(config, swaggerfile)
 
 	if err != nil {
 		return err
 	}
 
 	// First lets List all the deprecated APIs
-	kubepug.ListDeprecated(config, KubernetesAPIs, showDescription)
+	KubernetesAPIs.ListDeprecated(config, showDescription)
 
 	if apiWalk {
-		kubepug.WalkObjects(config, KubernetesAPIs)
+		KubernetesAPIs.WalkObjects(config)
 	}
 
 	return nil

@@ -17,3 +17,6 @@ type KubeAPI struct {
 	name        string
 	deprecated  bool
 }
+
+// KubernetesAPIs is a map of KubeAPI objects
+type KubernetesAPIs map[string]KubeAPI

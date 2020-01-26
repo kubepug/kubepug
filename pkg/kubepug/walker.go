@@ -48,7 +48,7 @@ func (crds crdStruct) populateCRDGroups(dynClient dynamic.Interface, version str
 }
 
 // WalkObjects walk through Kubernetes API and verifies which Resources doesn't exists anymore in swagger.json
-func WalkObjects(config *rest.Config, KubernetesAPIs map[string]KubeAPI) {
+func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) {
 
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
