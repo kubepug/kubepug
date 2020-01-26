@@ -26,7 +26,7 @@ func listObjects(items []unstructured.Unstructured) {
 }
 
 // ListDeprecated receives the Map of Deprecated API and List the existent Deprecated Objects in the Cluster
-func ListDeprecated(config *rest.Config, KubeAPIs map[string]KubeAPI, showDescription bool) {
+func (KubeAPIs KubernetesAPIs) ListDeprecated(config *rest.Config, showDescription bool) {
 
 	client, err := dynamic.NewForConfig(config)
 	if err != nil {

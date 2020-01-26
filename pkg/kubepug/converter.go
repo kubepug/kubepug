@@ -78,15 +78,13 @@ func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAP
 }
 
 // PopulateKubeAPIMap Converts an API Definition into a map of KubeAPIs["group/version/name"]
-func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[string]KubeAPI, err error) {
-
-	KubeAPIs = make(map[string]KubeAPI)
+func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (err error) {
 
 	// Open our jsonFile
 	jsonFile, err := os.Open(swaggerfile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		return KubeAPIs, err
+		return err
 	}
 
 	// read our opened xmlFile as a byte array.
@@ -94,13 +92,13 @@ func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[s
 
 	err = jsonFile.Close()
 	if err != nil {
-		return KubeAPIs, err
+		return err
 	}
 
 	err = json.Unmarshal(byteValue, &definitionsMap)
 	if err != nil {
 		fmt.Println("Error parsing the JSON, file might me invalid")
-		return KubeAPIs, err
+		return err
 	}
 
 	definitions := definitionsMap["definitions"].(map[string]interface{})
@@ -117,7 +115,7 @@ func PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (KubeAPIs map[s
 			KubeAPIs[name] = kubeapivalue
 		}
 	}
-	return KubeAPIs, nil
+	return nil
 }
 
 // DiscoverResourceName provides a Resource Name based in its Group, Version and Kind
