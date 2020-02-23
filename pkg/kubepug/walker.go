@@ -13,11 +13,13 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-type crdStruct map[string]struct{}
+type ignoreStruct map[string]struct{}
 
 const crdGroup = "apiextensions.k8s.io"
+const apiRegistration = "apiregistration.k8s.io"
 
-func (crds crdStruct) populateCRDGroups(dynClient dynamic.Interface, version string) {
+// This function will receive an apiExtension (CRD) and populate it into the struct to be verified later
+func (ignoreStruct ignoreStruct) populateCRDGroups(dynClient dynamic.Interface, version string) {
 	crdgvr := schema.GroupVersionResource{
 		Group:    crdGroup,
 		Version:  version,
@@ -41,8 +43,43 @@ func (crds crdStruct) populateCRDGroups(dynClient dynamic.Interface, version str
 		if err != nil || !found {
 			continue
 		}
-		if _, ok := crds[group]; !ok {
-			crds[group] = empty
+		if _, ok := ignoreStruct[group]; !ok {
+			ignoreStruct[group] = empty
+		}
+	}
+}
+
+// This function will receive an apiRegistration (APIService) and populate it into the struct
+// to be verified later. It will consider only if the field "service" is not null
+// representing an external Service
+func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface, version string) {
+	apisvcgvr := schema.GroupVersionResource{
+		Group:    apiRegistration,
+		Version:  version,
+		Resource: "apiservices",
+	}
+
+	apisvcList, err := dynClient.Resource(apisvcgvr).List(metav1.ListOptions{})
+	if apierrors.IsNotFound(err) {
+		return
+	}
+	if err != nil {
+		panic(err)
+	}
+
+	// We'll create an empty map[crd] because that's easier than keep interating into an array/slice to find a value
+	var empty struct{}
+
+	for _, d := range apisvcList.Items {
+		_, foundSvc, errSvc := unstructured.NestedString(d.Object, "spec", "service", "name")
+		group, foundGrp, errGrp := unstructured.NestedString(d.Object, "spec", "group")
+		// No services fields or group field found, move on!
+		if errSvc != nil || !foundSvc || errGrp != nil || !foundGrp {
+			continue
+		}
+
+		if _, ok := ignoreStruct[group]; !ok {
+			ignoreStruct[group] = empty
 		}
 	}
 }
@@ -65,20 +102,24 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) {
 		panic(err)
 	}
 
-	var crds crdStruct = make(map[string]struct{})
+	var ignoreObjects ignoreStruct = make(map[string]struct{})
 
 	// Discovery CRDs versions to populate CRDs
 	for _, resources := range resourcesList {
 		if strings.Contains(resources.GroupVersion, crdGroup) {
 			version := strings.Split(resources.GroupVersion, "/")[1]
-			crds.populateCRDGroups(dynClient, version)
+			ignoreObjects.populateCRDGroups(dynClient, version)
+		}
+		if strings.Contains(resources.GroupVersion, apiRegistration) {
+			version := strings.Split(resources.GroupVersion, "/")[1]
+			ignoreObjects.populateAPIService(dynClient, version)
 		}
 	}
 
 	for _, resourceGroupVersion := range resourcesList {
 
 		// We dont want CRDs to be walked
-		if _, ok := crds[strings.Split(resourceGroupVersion.GroupVersion, "/")[0]]; ok {
+		if _, ok := ignoreObjects[strings.Split(resourceGroupVersion.GroupVersion, "/")[0]]; ok {
 			continue
 		}
 
