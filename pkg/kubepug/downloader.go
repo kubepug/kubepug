@@ -19,7 +19,7 @@ func downloadFile(filename, url string) error {
 		return err
 	}
 	if resp.StatusCode > 305 {
-		return fmt.Errorf("dould not download the swagger file %s", url)
+		return fmt.Errorf("could not download the swagger file %s", url)
 	}
 	defer resp.Body.Close()
 
