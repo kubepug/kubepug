@@ -1,0 +1,36 @@
+name: ci
+on:
+  pull_request:
+    branches:
+    - '*'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Add GOPATH/bin to PATH
+      run: echo "::add-path::$(go env GOPATH)/bin"
+
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Ensure go.mod is already tidied
+      run: go mod tidy && git diff --no-patch --exit-code
+    
+    - name: Run Golint
+      run: go get -u golang.org/x/lint/golint && golint -set_exit_status ./...
+
+    - name: Verify building
+      run: go build -o ./kubepug cmd/kubepug.go
+      
