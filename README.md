@@ -54,17 +54,34 @@ DaemonSet found in extensions/v1beta1
 
 ```
 
+### Air-gapped environment
+
+This happens when you have a secure environment that does not have an internet connectivity.
+
+Steps to follow:
+
+1. Download swagger file in a machine that has internet connection
+
+`$ curl -o swagger-v1.17.0.json https://raw.githubusercontent.com/kubernetes/kubernetes/v1.17.0/api/openapi-spec/swagger.json`
+
+2. Securely move the json file to your Air-Gapped environment, to the folder of your choosing. This folder will be used by `kubepug`.
+
+3. Execute `kubepug` with the option `swagger-dir`, like this
+
+`$ kubepug --k8s-version=v1.17.0 --swagger-dir=/your/swagger/folder`
+
+This will verify the current context against the swagger file we downloaded and copied over manually
+
 ## Screenshot
+
 ![Kubepug](assets/screenshot.png)
 
 ## Todo
+
 * Add some Unit Tests
-
-
 
 ## References
 
 As I've used this project to learn Go and also some Kubernetes [client-go](https://github.com/kubernetes/client-go/) some parts of this plugin are based in Caio Begotti's [Pod-Tree](https://github.com/caiobegotti/Pod-Dive), Ahmet Balkan [kubectl-tree](https://github.com/ahmetb/kubectl-tree) and Bitnami [Kubecfg](https://github.com/bitnami/kubecfg)
 
 Logo based in <a href="https://br.freepik.com/fotos-vetores-gratis/mao">Mão vetor criado por freepik - br.freepik.com</a>
-
