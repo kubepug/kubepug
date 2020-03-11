@@ -3,18 +3,11 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 
-	"github.com/rikatz/kubepug/pkg/kubepug"
+	"github.com/rikatz/kubepug/lib"
 	"github.com/spf13/cobra"
-
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-)
-
-var (
-	kubernetesConfigFlags *genericclioptions.ConfigFlags
 )
 
 var (
@@ -23,6 +16,8 @@ var (
 	apiWalk         bool
 	swaggerDir      string
 	showDescription bool
+	format          string
+	filename        string
 
 	rootCmd = &cobra.Command{
 		Use:          filepath.Base(os.Args[0]),
@@ -34,34 +29,27 @@ var (
 	}
 )
 
+const formatDesc = `choose a format for the list of deprecated APIs.
+Options:
+- plain: prints all deprecated APIs to standard output
+- json: outputs all deprecated APIs to a file in JSON format, deprecated.json
+- yaml: outputs all deprecated APIs to a file in YAML format, deprecated.yaml
+`
+
 func runPug(cmd *cobra.Command, args []string) error {
 
-	var KubernetesAPIs kubepug.KubernetesAPIs = make(kubepug.KubernetesAPIs)
-
-	swaggerfile, err := kubepug.DownloadSwaggerFile(k8sVersion, swaggerDir, forceDownload)
-
-	if err != nil {
-		return err
-	}
-	config, err := kubernetesConfigFlags.ToRESTConfig()
-	if err != nil {
-		return err
+	config := lib.Config{
+		K8sVersion:      k8sVersion,
+		ForceDownload:   forceDownload,
+		APIWalk:         apiWalk,
+		SwaggerDir:      swaggerDir,
+		ShowDescription: showDescription,
 	}
 
-	err = KubernetesAPIs.PopulateKubeAPIMap(config, swaggerfile)
+	kubepug := lib.NewKubepug(config)
 
-	if err != nil {
-		return err
-	}
-
-	// First lets List all the deprecated APIs
-	KubernetesAPIs.ListDeprecated(config, showDescription)
-
-	if apiWalk {
-		KubernetesAPIs.WalkObjects(config)
-	}
-
-	return nil
+	err := kubepug.GetDeprecated()
+	return err
 
 }
 
@@ -72,8 +60,6 @@ func init() {
 		rootCmd.Example = cmdValue
 	}
 
-	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
-	kubernetesConfigFlags.AddFlags(rootCmd.Flags())
 	rootCmd.Flags().MarkHidden("as")                       // Ignoring error in deepsource. skipcq: GSC-G104
 	rootCmd.Flags().MarkHidden("as-group")                 // Ignoring error in deepsource. skipcq: GSC-G104
 	rootCmd.Flags().MarkHidden("cache-dir")                // Ignoring error in deepsource. skipcq: GSC-G104
@@ -92,11 +78,26 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&k8sVersion, "k8s-version", "master", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
 	rootCmd.PersistentFlags().StringVar(&swaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
 	rootCmd.PersistentFlags().BoolVar(&forceDownload, "force-download", false, "Wether to force the download of a new swagger.json file even if one exists. Defaults to false")
+	rootCmd.PersistentFlags().StringVar(&format, "format", "plain", formatDesc)
+	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", formatDesc)
 
 }
 
 func main() {
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		os.Exit(1)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+	fm, err := os.Create("mem.mprof")
+	if err != nil {
+		os.Exit(1)
+	}
+	pprof.WriteHeapProfile(fm)
+	fm.Close()
 }

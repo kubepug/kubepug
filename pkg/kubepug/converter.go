@@ -28,15 +28,9 @@ func getGroupVersionKind(value map[string]interface{}) (group, version, kind str
 	return group, version, kind
 }
 
-func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAPI, bool) {
+func getKubeAPIValues(value map[string]interface{}, disco *discovery.DiscoveryClient) (KubeAPI, bool) {
 	var valid, deprecated bool
 	var description, group, version, kind, resourceName string
-
-	disco, err := discovery.NewDiscoveryClientForConfig(config)
-
-	if err != nil {
-		panic(err)
-	}
 
 	gvk, valid, err := unstructured.NestedSlice(value, "x-kubernetes-group-version-kind")
 
@@ -79,14 +73,14 @@ func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAP
 
 // PopulateKubeAPIMap Converts an API Definition into a map of KubeAPIs["group/version/name"]
 func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (err error) {
-
+	fmt.Println("6.1")
 	// Open our jsonFile
 	jsonFile, err := os.Open(swaggerfile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("6.2")
 	// read our opened xmlFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
@@ -94,18 +88,25 @@ func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfi
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("6.3")
 	err = json.Unmarshal(byteValue, &definitionsMap)
 	if err != nil {
 		fmt.Println("Error parsing the JSON, file might me invalid")
 		return err
 	}
-
+	fmt.Println("6.4")
 	definitions := definitionsMap["definitions"].(map[string]interface{})
 
-	for _, value := range definitions {
+	disco, err := discovery.NewDiscoveryClientForConfig(config)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for i, value := range definitions {
 		val := value.(map[string]interface{})
-		if kubeapivalue, valid := getKubeAPIValues(val, config); valid {
+		fmt.Printf("6.4.%s\n", i)
+		if kubeapivalue, valid := getKubeAPIValues(val, disco); valid {
 			var name string
 			if kubeapivalue.group != "" {
 				name = fmt.Sprintf("%s/%s/%s", kubeapivalue.group, kubeapivalue.version, kubeapivalue.name)
@@ -115,6 +116,7 @@ func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfi
 			KubeAPIs[name] = kubeapivalue
 		}
 	}
+	fmt.Println("6.5")
 	return nil
 }
 
