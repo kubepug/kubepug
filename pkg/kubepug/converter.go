@@ -73,14 +73,12 @@ func getKubeAPIValues(value map[string]interface{}, disco *discovery.DiscoveryCl
 
 // PopulateKubeAPIMap Converts an API Definition into a map of KubeAPIs["group/version/name"]
 func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (err error) {
-	fmt.Println("6.1")
 	// Open our jsonFile
 	jsonFile, err := os.Open(swaggerfile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		return err
 	}
-	fmt.Println("6.2")
 	// read our opened xmlFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
@@ -88,13 +86,11 @@ func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfi
 	if err != nil {
 		return err
 	}
-	fmt.Println("6.3")
 	err = json.Unmarshal(byteValue, &definitionsMap)
 	if err != nil {
 		fmt.Println("Error parsing the JSON, file might me invalid")
 		return err
 	}
-	fmt.Println("6.4")
 	definitions := definitionsMap["definitions"].(map[string]interface{})
 
 	disco, err := discovery.NewDiscoveryClientForConfig(config)
@@ -103,9 +99,8 @@ func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfi
 		panic(err)
 	}
 
-	for i, value := range definitions {
+	for _, value := range definitions {
 		val := value.(map[string]interface{})
-		fmt.Printf("6.4.%s\n", i)
 		if kubeapivalue, valid := getKubeAPIValues(val, disco); valid {
 			var name string
 			if kubeapivalue.group != "" {
@@ -116,7 +111,6 @@ func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfi
 			KubeAPIs[name] = kubeapivalue
 		}
 	}
-	fmt.Println("6.5")
 	return nil
 }
 

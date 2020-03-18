@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime/pprof"
 	"strings"
 
 	"github.com/rikatz/kubepug/lib"
+	"github.com/rikatz/kubepug/pkg/formatter"
+	kpug "github.com/rikatz/kubepug/pkg/kubepug"
 	"github.com/spf13/cobra"
 )
 
@@ -31,9 +34,10 @@ var (
 
 const formatDesc = `choose a format for the list of deprecated APIs.
 Options:
-- plain: prints all deprecated APIs to standard output
-- json: outputs all deprecated APIs to a file in JSON format, deprecated.json
-- yaml: outputs all deprecated APIs to a file in YAML format, deprecated.yaml
+- plain: prints all deprecated APIs
+- stdout: prints all deprecated APIs to STDOUT beautiffied
+- json: outputs all deprecated APIs in JSON format
+- yaml: outputs all deprecated APIs in YAML format
 `
 
 func runPug(cmd *cobra.Command, args []string) error {
@@ -48,9 +52,36 @@ func runPug(cmd *cobra.Command, args []string) error {
 
 	kubepug := lib.NewKubepug(config)
 
-	err := kubepug.GetDeprecated()
-	return err
+	results := &kpug.Result{}
+	deprecatedAPIs, err := kubepug.GetDeprecated()
+	if err != nil {
+		return err
+	}
+	results.DeprecatedAPIs = deprecatedAPIs
 
+	if apiWalk {
+		err = kubepug.WalkObjects()
+		if err != nil {
+			return err
+		}
+	}
+
+	formatter := formatter.NewFormatter(format)
+	bytes, err := formatter.Output(*results)
+	if err != nil {
+		return err
+	}
+
+	if filename != "" {
+		err = ioutil.WriteFile(filename, bytes, 0644)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	fmt.Printf("%s", string(bytes))
+	return nil
 }
 
 func init() {
@@ -78,26 +109,13 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&k8sVersion, "k8s-version", "master", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
 	rootCmd.PersistentFlags().StringVar(&swaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
 	rootCmd.PersistentFlags().BoolVar(&forceDownload, "force-download", false, "Wether to force the download of a new swagger.json file even if one exists. Defaults to false")
-	rootCmd.PersistentFlags().StringVar(&format, "format", "plain", formatDesc)
+	rootCmd.PersistentFlags().StringVar(&format, "format", "stdout", formatDesc)
 	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", formatDesc)
 
 }
 
 func main() {
-	f, err := os.Create("cpu.prof")
-	if err != nil {
-		os.Exit(1)
-	}
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
-	fm, err := os.Create("mem.mprof")
-	if err != nil {
-		os.Exit(1)
-	}
-	pprof.WriteHeapProfile(fm)
-	fm.Close()
 }
