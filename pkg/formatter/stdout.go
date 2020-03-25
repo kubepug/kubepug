@@ -32,6 +32,7 @@ func (f *stdout) Output(results kubepug.Result) ([]byte, error) {
 	s = fmt.Sprintf("%s\n%s:\n\n", s, resourceColor("Deleted APIs"))
 	for _, api := range results.DeletedAPIs {
 		s = fmt.Sprintf("%s%s found in %s/%s\n", s, resourceColor(api.Kind), gvColor(api.Group), gvColor(api.Version))
+		s = fmt.Sprintf("%s\t ├─ %s\n", s, errorColor("API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELLY!!"))
 		items := stdoutListItems(api.Items)
 		s = fmt.Sprintf("%s%s\n", s, items)
 	}
