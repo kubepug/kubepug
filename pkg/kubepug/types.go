@@ -1,13 +1,5 @@
 package kubepug
 
-import "github.com/fatih/color"
-
-var gvColor = color.New(color.FgHiBlack).Add(color.Bold).SprintFunc()
-var resourceColor = color.New(color.FgRed).Add(color.Bold).SprintFunc()
-var globalColor = color.New(color.FgBlue).Add(color.Bold).SprintFunc()
-var namespaceColor = color.New(color.FgCyan).Add(color.Bold).SprintFunc()
-var errorColor = color.New(color.FgWhite).Add(color.BgRed).Add(color.Bold).SprintFunc()
-
 // KubeAPI represents a Kubernetes API defined in swagger.json
 type KubeAPI struct {
 	description string
@@ -39,7 +31,18 @@ type DeprecatedItem struct {
 	Namespace string `json,yaml:"namespace,omitempty"`
 }
 
+// DeletedAPI definition of an API
+type DeletedAPI struct {
+	Group   string           `json,yaml:"group,omitempty"`
+	Kind    string           `json,yaml:"kind,omitempty"`
+	Version string           `json,yaml:"version,omitempty"`
+	Name    string           `json,yaml:"name,omitempty"`
+	Deleted bool             `json,yaml:"deleted,omitempty"`
+	Items   []DeprecatedItem `json,yaml:"deleted_items,omitempty"`
+}
+
 // Result to show final user
 type Result struct {
 	DeprecatedAPIs []DeprecatedAPI `json,yaml:"deprecated_apis,omitempty"`
+	DeletedAPIs    []DeletedAPI    `json,yaml:"deleted_apis,omitempty"`
 }

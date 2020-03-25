@@ -9,7 +9,6 @@ import (
 
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
-	kpug "github.com/rikatz/kubepug/pkg/kubepug"
 	"github.com/spf13/cobra"
 )
 
@@ -32,14 +31,6 @@ var (
 	}
 )
 
-const formatDesc = `choose a format for the list of deprecated APIs.
-Options:
-- plain: prints all deprecated APIs
-- stdout: prints all deprecated APIs to STDOUT beautiffied
-- json: outputs all deprecated APIs in JSON format
-- yaml: outputs all deprecated APIs in YAML format
-`
-
 func runPug(cmd *cobra.Command, args []string) error {
 
 	config := lib.Config{
@@ -52,22 +43,13 @@ func runPug(cmd *cobra.Command, args []string) error {
 
 	kubepug := lib.NewKubepug(config)
 
-	results := &kpug.Result{}
-	deprecatedAPIs, err := kubepug.GetDeprecated()
+	result, err := kubepug.GetDeprecated()
 	if err != nil {
 		return err
 	}
-	results.DeprecatedAPIs = deprecatedAPIs
-
-	if apiWalk {
-		err = kubepug.WalkObjects()
-		if err != nil {
-			return err
-		}
-	}
 
 	formatter := formatter.NewFormatter(format)
-	bytes, err := formatter.Output(*results)
+	bytes, err := formatter.Output(*result)
 	if err != nil {
 		return err
 	}
@@ -77,10 +59,10 @@ func runPug(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		return nil
+	} else {
+		fmt.Printf("%s", string(bytes))
 	}
 
-	fmt.Printf("%s", string(bytes))
 	return nil
 }
 
@@ -109,9 +91,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&k8sVersion, "k8s-version", "master", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
 	rootCmd.PersistentFlags().StringVar(&swaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
 	rootCmd.PersistentFlags().BoolVar(&forceDownload, "force-download", false, "Wether to force the download of a new swagger.json file even if one exists. Defaults to false")
-	rootCmd.PersistentFlags().StringVar(&format, "format", "stdout", formatDesc)
-	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", formatDesc)
-
+	rootCmd.PersistentFlags().StringVar(&format, "format", "stdout", "Format in which the list will be displayed [stdout, plain, json, yaml]")
+	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
 }
 
 func main() {

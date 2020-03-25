@@ -86,7 +86,7 @@ func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface,
 }
 
 // WalkObjects walk through Kubernetes API and verifies which Resources doesn't exists anymore in swagger.json
-func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) {
+func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) []DeletedAPI {
 
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
@@ -117,6 +117,7 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) {
 		}
 	}
 
+	deleted := []DeletedAPI{}
 	for _, resourceGroupVersion := range resourcesList {
 
 		// We dont want CRDs to be walked
@@ -130,8 +131,7 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) {
 			if len(strings.Split(resource.Name, "/")) != 1 {
 				continue
 			}
-
-			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Name)
+			keyAPI := fmt.Sprintf("%s/%s\n", resourceGroupVersion.GroupVersion, resource.Name)
 			if _, ok := KubernetesAPIs[keyAPI]; !ok {
 				gv, err := schema.ParseGroupVersion(resourceGroupVersion.GroupVersion)
 				if err != nil {
@@ -142,18 +142,25 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) {
 				if apierrors.IsNotFound(err) {
 					continue
 				}
+				if apierrors.IsMethodNotSupported(err) {
+					continue
+				}
 				if err != nil {
 					panic(err)
 				}
 				if len(list.Items) > 0 {
-					fmt.Printf("%s found in %s/%s\n", resourceColor(resource.Kind), gvColor(gv.Group), gvColor(gv.Version))
-					fmt.Printf("\t ├─ %s\n", errorColor("API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELLY!!"))
-					listObjects(list.Items)
-					fmt.Printf("\n")
-
+					d := DeletedAPI{
+						Deleted: true,
+						Name:    resource.Name,
+						Group:   gvr.GroupResource().String(),
+						Kind:    resource.Kind,
+						Version: gv.Version,
+					}
+					d.Items = listObjects(list.Items)
+					deleted = append(deleted, d)
 				}
 			}
-
 		}
 	}
+	return deleted
 }

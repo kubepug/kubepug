@@ -26,14 +26,26 @@ func (f *stdout) Output(results kubepug.Result) ([]byte, error) {
 		if api.Description != "" {
 			s = fmt.Sprintf("%s\t ├─ %s\n", s, api.Description)
 		}
-		for _, i := range api.Items {
-			if i.Namespace != "" {
-				s = fmt.Sprintf("%s\t\t-> %s: %s %s %s\n", s, namespaceColor(i.Kind), i.Name, namespaceColor("namespace:"), i.Namespace)
-			} else {
-				s = fmt.Sprintf("%s\t\t-> %s: %s \n", s, globalColor(i.Kind), i.Name)
-			}
-		}
-		s = fmt.Sprintf("%s\n", s)
+		items := stdoutListItems(api.Items)
+		s = fmt.Sprintf("%s%s\n", s, items)
+	}
+	s = fmt.Sprintf("%s\n%s:\n\n", s, resourceColor("Deleted APIs"))
+	for _, api := range results.DeletedAPIs {
+		s = fmt.Sprintf("%s%s found in %s/%s\n", s, resourceColor(api.Kind), gvColor(api.Group), gvColor(api.Version))
+		items := stdoutListItems(api.Items)
+		s = fmt.Sprintf("%s%s\n", s, items)
 	}
 	return []byte(s), nil
+}
+
+func stdoutListItems(items []kubepug.DeprecatedItem) string {
+	s := fmt.Sprintf("")
+	for _, i := range items {
+		if i.Namespace != "" {
+			s = fmt.Sprintf("%s\t\t-> %s: %s %s %s\n", s, namespaceColor(i.Kind), i.Name, namespaceColor("namespace:"), i.Namespace)
+		} else {
+			s = fmt.Sprintf("%s\t\t-> %s: %s \n", s, globalColor(i.Kind), i.Name)
+		}
+	}
+	return s
 }

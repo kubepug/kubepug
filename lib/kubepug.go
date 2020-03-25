@@ -1,8 +1,6 @@
 package lib
 
 import (
-	"fmt"
-
 	"github.com/rikatz/kubepug/pkg/kubepug"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
@@ -35,7 +33,7 @@ func NewKubepug(config Config) *Kubepug {
 }
 
 // GetDeprecated returns the list of
-func (k *Kubepug) GetDeprecated() ([]kubepug.DeprecatedAPI, error) {
+func (k *Kubepug) GetDeprecated() (*kubepug.Result, error) {
 	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 
 	var KubernetesAPIs kubepug.KubernetesAPIs = make(kubepug.KubernetesAPIs)
@@ -55,20 +53,14 @@ func (k *Kubepug) GetDeprecated() ([]kubepug.DeprecatedAPI, error) {
 	if err != nil {
 		return nil, err
 	}
-	// First lets List all the deprecated APIs
-	deprecated := KubernetesAPIs.ListDeprecated(config, k.Config.ShowDescription)
-	return deprecated, nil
-}
 
-// WalkObjects will walk through the objects deployed in your cluster
-func (k *Kubepug) WalkObjects() error {
-	var KubernetesAPIs kubepug.KubernetesAPIs = make(kubepug.KubernetesAPIs)
-	config, err := kubernetesConfigFlags.ToRESTConfig()
-	if err != nil {
-		return err
+	result := kubepug.Result{}
+	// First lets List all the deprecated APIs
+	result.DeprecatedAPIs = KubernetesAPIs.ListDeprecated(config, k.Config.ShowDescription)
+
+	if k.Config.APIWalk {
+		result.DeletedAPIs = KubernetesAPIs.WalkObjects(config)
 	}
-	fmt.Println("8")
-	KubernetesAPIs.WalkObjects(config)
-	fmt.Println("9")
-	return nil
+
+	return &result, nil
 }
