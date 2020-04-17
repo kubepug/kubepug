@@ -1,6 +1,7 @@
 package kubepug
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -26,7 +27,7 @@ func (ignoreStruct ignoreStruct) populateCRDGroups(dynClient dynamic.Interface, 
 		Resource: "customresourcedefinitions",
 	}
 
-	crdList, err := dynClient.Resource(crdgvr).List(metav1.ListOptions{})
+	crdList, err := dynClient.Resource(crdgvr).List(context.TODO(), metav1.ListOptions{})
 	if apierrors.IsNotFound(err) {
 		return
 	}
@@ -59,7 +60,7 @@ func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface,
 		Resource: "apiservices",
 	}
 
-	apisvcList, err := dynClient.Resource(apisvcgvr).List(metav1.ListOptions{})
+	apisvcList, err := dynClient.Resource(apisvcgvr).List(context.TODO(), metav1.ListOptions{})
 	if apierrors.IsNotFound(err) {
 		return
 	}
@@ -137,7 +138,7 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) {
 					panic(err)
 				}
 				gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: resource.Name}
-				list, err := dynClient.Resource(gvr).List(metav1.ListOptions{})
+				list, err := dynClient.Resource(gvr).List(context.TODO(), metav1.ListOptions{})
 				if apierrors.IsNotFound(err) {
 					continue
 				}

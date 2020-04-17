@@ -1,6 +1,7 @@
 package kubepug
 
 import (
+	"context"
 	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -39,7 +40,7 @@ func (KubeAPIs KubernetesAPIs) ListDeprecated(config *rest.Config, showDescripti
 			continue
 		}
 		gvr := schema.GroupVersionResource{Group: dpa.group, Version: dpa.version, Resource: dpa.name}
-		list, err := client.Resource(gvr).List(metav1.ListOptions{})
+		list, err := client.Resource(gvr).List(context.TODO(), metav1.ListOptions{})
 		if apierrors.IsNotFound(err) {
 			continue
 		}
