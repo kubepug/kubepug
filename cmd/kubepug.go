@@ -10,6 +10,11 @@ import (
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+)
+
+var (
+	kubernetesConfigFlags *genericclioptions.ConfigFlags
 )
 
 var (
@@ -39,6 +44,7 @@ func runPug(cmd *cobra.Command, args []string) error {
 		APIWalk:         apiWalk,
 		SwaggerDir:      swaggerDir,
 		ShowDescription: showDescription,
+		ConfigFlags:     kubernetesConfigFlags,
 	}
 
 	kubepug := lib.NewKubepug(config)
@@ -72,6 +78,9 @@ func init() {
 		rootCmd.Use = cmdValue
 		rootCmd.Example = cmdValue
 	}
+
+	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
+	kubernetesConfigFlags.AddFlags(rootCmd.Flags())
 
 	rootCmd.Flags().MarkHidden("as")                       // Ignoring error in deepsource. skipcq: GSC-G104
 	rootCmd.Flags().MarkHidden("as-group")                 // Ignoring error in deepsource. skipcq: GSC-G104

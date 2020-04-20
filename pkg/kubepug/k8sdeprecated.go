@@ -17,9 +17,9 @@ func listObjects(items []unstructured.Unstructured) []DeprecatedItem {
 		name := d.GetName()
 		namespace := d.GetNamespace()
 		if namespace != "" {
-			deprecatedItems = append(deprecatedItems, DeprecatedItem{Kind: "OBJECT", Name: name, Namespace: namespace})
+			deprecatedItems = append(deprecatedItems, DeprecatedItem{Scope: "OBJECT", ObjectName: name, Namespace: namespace})
 		} else {
-			deprecatedItems = append(deprecatedItems, DeprecatedItem{Kind: "GLOBAL", Name: name})
+			deprecatedItems = append(deprecatedItems, DeprecatedItem{Scope: "GLOBAL", ObjectName: name})
 		}
 	}
 	return deprecatedItems
@@ -50,7 +50,7 @@ func (KubeAPIs KubernetesAPIs) ListDeprecated(config *rest.Config, showDescripti
 		}
 		if len(list.Items) > 0 {
 			api := DeprecatedAPI{
-				Kind:       dpa.kind,
+				Scope:      dpa.kind,
 				Deprecated: dpa.deprecated,
 				Group:      dpa.group,
 				Name:       dpa.name,

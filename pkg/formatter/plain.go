@@ -15,7 +15,7 @@ func newPlainFormatter() Formatter {
 func (f *plain) Output(results kubepug.Result) ([]byte, error) {
 	s := fmt.Sprintf("RESULTS:\nDeprecated APIs:\n\n")
 	for _, api := range results.DeprecatedAPIs {
-		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Kind, api.Group, api.Version)
+		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Scope, api.Group, api.Version)
 		if api.Description != "" {
 			s = fmt.Sprintf("%sDescription: %s\n", s, api.Description)
 		}
@@ -24,7 +24,7 @@ func (f *plain) Output(results kubepug.Result) ([]byte, error) {
 	}
 	s = fmt.Sprintf("%s\nDeleted APIs:\n\n", s)
 	for _, api := range results.DeletedAPIs {
-		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Kind, api.Group, api.Version)
+		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Scope, api.Group, api.Version)
 		items := listItems(api.Items)
 		s = fmt.Sprintf("%s%s\n", s, items)
 	}
@@ -35,9 +35,9 @@ func listItems(items []kubepug.DeprecatedItem) string {
 	s := fmt.Sprintf("")
 	for _, i := range items {
 		if i.Namespace != "" {
-			s = fmt.Sprintf("%s%s: %s namespace: %s\n", s, i.Kind, i.Name, i.Namespace)
+			s = fmt.Sprintf("%s%s: %s namespace: %s\n", s, i.Scope, i.ObjectName, i.Namespace)
 		} else {
-			s = fmt.Sprintf("%s%s: %s \n", s, i.Kind, i.Name)
+			s = fmt.Sprintf("%s%s: %s \n", s, i.Scope, i.ObjectName)
 		}
 	}
 	return s

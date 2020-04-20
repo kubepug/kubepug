@@ -20,6 +20,7 @@ type Config struct {
 	APIWalk         bool
 	SwaggerDir      string
 	ShowDescription bool
+	ConfigFlags     *genericclioptions.ConfigFlags
 }
 
 // Kubepug struct to be used
@@ -32,10 +33,8 @@ func NewKubepug(config Config) *Kubepug {
 	return &Kubepug{Config: config}
 }
 
-// GetDeprecated returns the list of
+// GetDeprecated returns the list of deprecated APIs
 func (k *Kubepug) GetDeprecated() (*kubepug.Result, error) {
-	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
-
 	var KubernetesAPIs kubepug.KubernetesAPIs = make(kubepug.KubernetesAPIs)
 
 	swaggerfile, err := kubepug.DownloadSwaggerFile(k.Config.K8sVersion, k.Config.SwaggerDir, k.Config.ForceDownload)
@@ -44,7 +43,7 @@ func (k *Kubepug) GetDeprecated() (*kubepug.Result, error) {
 		return nil, err
 	}
 
-	config, err := kubernetesConfigFlags.ToRESTConfig()
+	config, err := k.Config.ConfigFlags.ToRESTConfig()
 	if err != nil {
 		return nil, err
 	}
