@@ -15,7 +15,7 @@ func newPlainFormatter() Formatter {
 func (f *plain) Output(results kubepug.Result) ([]byte, error) {
 	s := fmt.Sprintf("RESULTS:\nDeprecated APIs:\n\n")
 	for _, api := range results.DeprecatedAPIs {
-		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Scope, api.Group, api.Version)
+		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Kind, api.Group, api.Version)
 		if api.Description != "" {
 			s = fmt.Sprintf("%sDescription: %s\n", s, api.Description)
 		}
@@ -24,7 +24,7 @@ func (f *plain) Output(results kubepug.Result) ([]byte, error) {
 	}
 	s = fmt.Sprintf("%s\nDeleted APIs:\n\n", s)
 	for _, api := range results.DeletedAPIs {
-		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Scope, api.Group, api.Version)
+		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Kind, api.Group, api.Version)
 		items := listItems(api.Items)
 		s = fmt.Sprintf("%s%s\n", s, items)
 	}

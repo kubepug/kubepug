@@ -153,7 +153,7 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) []DeletedA
 						Deleted: true,
 						Name:    resource.Name,
 						Group:   gvr.GroupResource().String(),
-						Scope:   resource.Kind,
+						Kind:    resource.Kind,
 						Version: gv.Version,
 					}
 					d.Items = listObjects(list.Items)

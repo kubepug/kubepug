@@ -50,7 +50,7 @@ func (KubeAPIs KubernetesAPIs) ListDeprecated(config *rest.Config, showDescripti
 		}
 		if len(list.Items) > 0 {
 			api := DeprecatedAPI{
-				Scope:      dpa.kind,
+				Kind:       dpa.kind,
 				Deprecated: dpa.deprecated,
 				Group:      dpa.group,
 				Name:       dpa.name,

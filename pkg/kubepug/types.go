@@ -17,7 +17,7 @@ type KubernetesAPIs map[string]KubeAPI
 type DeprecatedAPI struct {
 	Description string           `json,yaml:"description,omitempty"`
 	Group       string           `json,yaml:"group,omitempty"`
-	Scope       string           `json,yaml:"scope,omitempty"`
+	Kind        string           `json,yaml:"kind,omitempty"`
 	Version     string           `json,yaml:"version,omitempty"`
 	Name        string           `json,yaml:"name,omitempty"`
 	Deprecated  bool             `json,yaml:"deprecated,omitempty"`
@@ -34,7 +34,7 @@ type DeprecatedItem struct {
 // DeletedAPI definition of an API
 type DeletedAPI struct {
 	Group   string           `json,yaml:"group,omitempty"`
-	Scope   string           `json,yaml:"scope,omitempty"`
+	Kind    string           `json,yaml:"kind,omitempty"`
 	Version string           `json,yaml:"version,omitempty"`
 	Name    string           `json,yaml:"name,omitempty"`
 	Deleted bool             `json,yaml:"deleted,omitempty"`
