@@ -28,15 +28,9 @@ func getGroupVersionKind(value map[string]interface{}) (group, version, kind str
 	return group, version, kind
 }
 
-func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAPI, bool) {
+func getKubeAPIValues(value map[string]interface{}, disco *discovery.DiscoveryClient) (KubeAPI, bool) {
 	var valid, deprecated bool
 	var description, group, version, kind, resourceName string
-
-	disco, err := discovery.NewDiscoveryClientForConfig(config)
-
-	if err != nil {
-		panic(err)
-	}
 
 	gvk, valid, err := unstructured.NestedSlice(value, "x-kubernetes-group-version-kind")
 
@@ -79,14 +73,12 @@ func getKubeAPIValues(value map[string]interface{}, config *rest.Config) (KubeAP
 
 // PopulateKubeAPIMap Converts an API Definition into a map of KubeAPIs["group/version/name"]
 func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfile string) (err error) {
-
 	// Open our jsonFile
 	jsonFile, err := os.Open(swaggerfile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		return err
 	}
-
 	// read our opened xmlFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
@@ -94,18 +86,22 @@ func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(config *rest.Config, swaggerfi
 	if err != nil {
 		return err
 	}
-
 	err = json.Unmarshal(byteValue, &definitionsMap)
 	if err != nil {
 		fmt.Println("Error parsing the JSON, file might me invalid")
 		return err
 	}
-
 	definitions := definitionsMap["definitions"].(map[string]interface{})
+
+	disco, err := discovery.NewDiscoveryClientForConfig(config)
+
+	if err != nil {
+		panic(err)
+	}
 
 	for _, value := range definitions {
 		val := value.(map[string]interface{})
-		if kubeapivalue, valid := getKubeAPIValues(val, config); valid {
+		if kubeapivalue, valid := getKubeAPIValues(val, disco); valid {
 			var name string
 			if kubeapivalue.group != "" {
 				name = fmt.Sprintf("%s/%s/%s", kubeapivalue.group, kubeapivalue.version, kubeapivalue.name)

@@ -1,13 +1,5 @@
 package kubepug
 
-import "github.com/fatih/color"
-
-var gvColor = color.New(color.FgHiBlack).Add(color.Bold).SprintFunc()
-var resourceColor = color.New(color.FgRed).Add(color.Bold).SprintFunc()
-var globalColor = color.New(color.FgBlue).Add(color.Bold).SprintFunc()
-var namespaceColor = color.New(color.FgCyan).Add(color.Bold).SprintFunc()
-var errorColor = color.New(color.FgWhite).Add(color.BgRed).Add(color.Bold).SprintFunc()
-
 // KubeAPI represents a Kubernetes API defined in swagger.json
 type KubeAPI struct {
 	description string
@@ -20,3 +12,37 @@ type KubeAPI struct {
 
 // KubernetesAPIs is a map of KubeAPI objects
 type KubernetesAPIs map[string]KubeAPI
+
+// DeprecatedAPI definition of an API
+type DeprecatedAPI struct {
+	Description string           `json,yaml:"description,omitempty"`
+	Group       string           `json,yaml:"group,omitempty"`
+	Kind        string           `json,yaml:"kind,omitempty"`
+	Version     string           `json,yaml:"version,omitempty"`
+	Name        string           `json,yaml:"name,omitempty"`
+	Deprecated  bool             `json,yaml:"deprecated,omitempty"`
+	Items       []DeprecatedItem `json,yaml:"deprecated_items,omitempty"`
+}
+
+// DeprecatedItem definition of the Items inside a deprecated API
+type DeprecatedItem struct {
+	Scope      string `json,yaml:"scope,omitempty"`
+	ObjectName string `json,yaml:"objectname,omitempty"`
+	Namespace  string `json,yaml:"namespace,omitempty"`
+}
+
+// DeletedAPI definition of an API
+type DeletedAPI struct {
+	Group   string           `json,yaml:"group,omitempty"`
+	Kind    string           `json,yaml:"kind,omitempty"`
+	Version string           `json,yaml:"version,omitempty"`
+	Name    string           `json,yaml:"name,omitempty"`
+	Deleted bool             `json,yaml:"deleted,omitempty"`
+	Items   []DeprecatedItem `json,yaml:"deleted_items,omitempty"`
+}
+
+// Result to show final user
+type Result struct {
+	DeprecatedAPIs []DeprecatedAPI `json,yaml:"deprecated_apis,omitempty"`
+	DeletedAPIs    []DeletedAPI    `json,yaml:"deleted_apis,omitempty"`
+}

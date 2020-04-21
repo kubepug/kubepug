@@ -2,7 +2,6 @@ package kubepug
 
 import (
 	"context"
-	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,27 +11,29 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func listObjects(items []unstructured.Unstructured) {
-
+func listObjects(items []unstructured.Unstructured) []DeprecatedItem {
+	deprecatedItems := []DeprecatedItem{}
 	for _, d := range items {
 		name := d.GetName()
 		namespace := d.GetNamespace()
 		if namespace != "" {
-			fmt.Printf("\t\t-> %s %s %s %s\n", namespaceColor("Object:"), name, namespaceColor("namespace:"), namespace)
+			deprecatedItems = append(deprecatedItems, DeprecatedItem{Scope: "OBJECT", ObjectName: name, Namespace: namespace})
 		} else {
-			fmt.Printf("\t\t-> %s: %s \n", globalColor("GLOBAL"), name)
+			deprecatedItems = append(deprecatedItems, DeprecatedItem{Scope: "GLOBAL", ObjectName: name})
 		}
 	}
-
+	return deprecatedItems
 }
 
 // ListDeprecated receives the Map of Deprecated API and List the existent Deprecated Objects in the Cluster
-func (KubeAPIs KubernetesAPIs) ListDeprecated(config *rest.Config, showDescription bool) {
+func (KubeAPIs KubernetesAPIs) ListDeprecated(config *rest.Config, showDescription bool) []DeprecatedAPI {
 
 	client, err := dynamic.NewForConfig(config)
 	if err != nil {
 		panic(err)
 	}
+
+	deprecated := []DeprecatedAPI{}
 
 	for _, dpa := range KubeAPIs {
 		// We only want deprecated APIs :)
@@ -48,14 +49,20 @@ func (KubeAPIs KubernetesAPIs) ListDeprecated(config *rest.Config, showDescripti
 			panic(err)
 		}
 		if len(list.Items) > 0 {
-			fmt.Printf("%s found in %s/%s\n", resourceColor(dpa.kind), gvColor(dpa.group), gvColor(dpa.version))
-			if showDescription {
-				fmt.Printf("\t ├─ %s\n", dpa.description)
+			api := DeprecatedAPI{
+				Kind:       dpa.kind,
+				Deprecated: dpa.deprecated,
+				Group:      dpa.group,
+				Name:       dpa.name,
+				Version:    dpa.version,
 			}
-
-			listObjects(list.Items)
-			fmt.Printf("\n")
+			if showDescription {
+				api.Description = dpa.description
+			}
+			api.Items = listObjects(list.Items)
+			deprecated = append(deprecated, api)
 		}
 	}
 
+	return deprecated
 }
