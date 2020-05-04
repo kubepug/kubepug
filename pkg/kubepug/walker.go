@@ -162,7 +162,7 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) (deleted [
 				}
 
 				if len(list.Items) > 0 {
-					log.Debugf("Found %d deleted items in %s/%s/%s", len(list.Items), gvr.GroupResource().String(), resource.Name)
+					log.Debugf("Found %d deleted items in %s/%s", len(list.Items), gvr.GroupResource().String(), resource.Name)
 					d := DeletedAPI{
 						Deleted: true,
 						Name:    resource.Name,
