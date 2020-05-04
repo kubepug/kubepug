@@ -3,14 +3,19 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 var (
@@ -25,6 +30,7 @@ var (
 	showDescription bool
 	format          string
 	filename        string
+	logLevel        string
 
 	rootCmd = &cobra.Command{
 		Use:          filepath.Base(os.Args[0]),
@@ -37,7 +43,6 @@ var (
 )
 
 func runPug(cmd *cobra.Command, args []string) error {
-
 	config := lib.Config{
 		K8sVersion:      k8sVersion,
 		ForceDownload:   forceDownload,
@@ -47,6 +52,21 @@ func runPug(cmd *cobra.Command, args []string) error {
 		ConfigFlags:     kubernetesConfigFlags,
 	}
 
+	lvl, err := logrus.ParseLevel(logLevel)
+	if err != nil {
+		return err
+	}
+	logrus.SetLevel(lvl)
+
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: true,
+		FullTimestamp: true,
+	})
+	if lvl == log.DebugLevel {
+		log.SetReportCaller(true)
+	}
+
+	log.Debugf("Starting Kubepug with configs: %+v", config)
 	kubepug := lib.NewKubepug(config)
 
 	result, err := kubepug.GetDeprecated()
@@ -54,6 +74,7 @@ func runPug(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	log.Debug("Starting deprecated objects printing")
 	formatter := formatter.NewFormatter(format)
 	bytes, err := formatter.Output(*result)
 	if err != nil {
@@ -102,10 +123,12 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&forceDownload, "force-download", false, "Wether to force the download of a new swagger.json file even if one exists. Defaults to false")
 	rootCmd.PersistentFlags().StringVar(&format, "format", "stdout", "Format in which the list will be displayed [stdout, plain, json, yaml]")
 	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
+	rootCmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
 }
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
+		log.Errorf("An error has ocurred: %v", err)
 		os.Exit(1)
 	}
 }

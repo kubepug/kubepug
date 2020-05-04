@@ -12,8 +12,11 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
+
+	log "github.com/sirupsen/logrus"
 )
 
+// ignoreStruct is an empty map, the key is the API Group to be ignored. No value exists
 type ignoreStruct map[string]struct{}
 
 const crdGroup = "apiextensions.k8s.io"
@@ -21,6 +24,8 @@ const apiRegistration = "apiregistration.k8s.io"
 
 // This function will receive an apiExtension (CRD) and populate it into the struct to be verified later
 func (ignoreStruct ignoreStruct) populateCRDGroups(dynClient dynamic.Interface, version string) {
+	log.Debugf("Populating CRDs array of version %s", version)
+
 	crdgvr := schema.GroupVersionResource{
 		Group:    crdGroup,
 		Version:  version,
@@ -32,7 +37,7 @@ func (ignoreStruct ignoreStruct) populateCRDGroups(dynClient dynamic.Interface, 
 		return
 	}
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to connect to K8s cluster to List CRDs")
 	}
 
 	// We'll create an empty map[crd] because that's easier than keep interating into an array/slice to find a value
@@ -54,6 +59,7 @@ func (ignoreStruct ignoreStruct) populateCRDGroups(dynClient dynamic.Interface, 
 // to be verified later. It will consider only if the field "service" is not null
 // representing an external Service
 func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface, version string) {
+	log.Debugf("Populating APIService array of version %s", version)
 	apisvcgvr := schema.GroupVersionResource{
 		Group:    apiRegistration,
 		Version:  version,
@@ -65,7 +71,7 @@ func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface,
 		return
 	}
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to connect to K8s cluster to List API Services")
 	}
 
 	// We'll create an empty map[crd] because that's easier than keep interating into an array/slice to find a value
@@ -86,21 +92,25 @@ func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface,
 }
 
 // WalkObjects walk through Kubernetes API and verifies which Resources doesn't exists anymore in swagger.json
-func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) []DeletedAPI {
+func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) (deleted []DeletedAPI) {
 
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to create the K8s Discovery client")
 	}
 
+	log.Debug("Getting all the Server Resources")
 	resourcesList, err := discoveryClient.ServerResources()
 	if err != nil {
-		panic(err)
+		if apierrors.IsForbidden(err) {
+			log.Fatalf("Failed to list Server Resources. Permission denied! Please check if you have the proper authorization")
+		}
+		log.Fatalf("Failed communicating with k8s while discovering server resources. \nError: %v", err)
 	}
 
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to create dynamic client. \nError: %v", err)
 	}
 
 	var ignoreObjects ignoreStruct = make(map[string]struct{})
@@ -117,10 +127,10 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) []DeletedA
 		}
 	}
 
-	deleted := []DeletedAPI{}
+	log.Debugf("Walking through %d resource types", len(resourcesList))
 	for _, resourceGroupVersion := range resourcesList {
 
-		// We dont want CRDs to be walked
+		// We dont want CRDs or APIExtensions to be walked
 		if _, ok := ignoreObjects[strings.Split(resourceGroupVersion.GroupVersion, "/")[0]]; ok {
 			continue
 		}
@@ -131,24 +141,28 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) []DeletedA
 			if len(strings.Split(resource.Name, "/")) != 1 {
 				continue
 			}
-			keyAPI := fmt.Sprintf("%s/%s\n", resourceGroupVersion.GroupVersion, resource.Name)
+			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Name)
 			if _, ok := KubernetesAPIs[keyAPI]; !ok {
 				gv, err := schema.ParseGroupVersion(resourceGroupVersion.GroupVersion)
 				if err != nil {
-					panic(err)
+					log.Fatalf("Failed to Parse GroupVersion of Resource")
 				}
 				gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: resource.Name}
 				list, err := dynClient.Resource(gvr).List(context.TODO(), metav1.ListOptions{})
-				if apierrors.IsNotFound(err) {
+				if apierrors.IsNotFound(err) || apierrors.IsMethodNotSupported(err) {
 					continue
 				}
-				if apierrors.IsMethodNotSupported(err) {
-					continue
+
+				if apierrors.IsForbidden(err) {
+					log.Fatalf("Failed to list Server Resources of type %s/%s/%s. Permission denied! Please check if you have the proper authorization", gv.Group, gv.Version, resource.Name)
 				}
+
 				if err != nil {
-					panic(err)
+					log.Fatalf("Failed to List objects of type %s/%s/%s. \nError: %v", gv.Group, gv.Version, resource.Name, err)
 				}
+
 				if len(list.Items) > 0 {
+					log.Debugf("Found %d deleted items in %s/%s", len(list.Items), gvr.GroupResource().String(), resource.Name)
 					d := DeletedAPI{
 						Deleted: true,
 						Name:    resource.Name,

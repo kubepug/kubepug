@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const baseURL = "https://raw.githubusercontent.com/kubernetes/kubernetes"
@@ -14,6 +16,7 @@ const fileURL = "api/openapi-spec/swagger.json"
 // From https://golangcode.com/download-a-file-from-a-url/ which was easier than create :P
 func downloadFile(filename, url string) error {
 	// Get the data
+	log.Debugf("Downloading file from %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -24,6 +27,7 @@ func downloadFile(filename, url string) error {
 	defer resp.Body.Close()
 
 	// Create the file
+	log.Debugf("Creating the file %s", filename)
 	out, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -54,6 +58,7 @@ func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename strin
 	fileExists, err := os.Stat(filename)
 
 	if os.IsNotExist(err) || (force && !fileExists.IsDir()) {
+		log.Infof("File does not exist or download is forced, downloading the file")
 		url := fmt.Sprintf("%s/%s/%s", baseURL, version, fileURL)
 		err := downloadFile(filename, url)
 		if err != nil {
