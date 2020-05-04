@@ -7,10 +7,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var (
-	kubernetesConfigFlags *genericclioptions.ConfigFlags
-)
-
 // Config configuration object for Kubepug
 // configurations for kubernetes and for kubepug functionality
 type Config struct {
