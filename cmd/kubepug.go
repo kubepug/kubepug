@@ -92,7 +92,7 @@ func runPug(cmd *cobra.Command, args []string) error {
 	}
 
 	if errorOnFound && (len(result.DeletedAPIs) > 0 || len(result.DeprecatedAPIs) > 0) {
-		return fmt.Errorf("Found %d Deleted APIs and %d Deprecated APIs", len(result.DeletedAPIs), len(result.DeprecatedAPIs))
+		return fmt.Errorf("found %d Deleted APIs and %d Deprecated APIs", len(result.DeletedAPIs), len(result.DeprecatedAPIs))
 	}
 	return nil
 }
