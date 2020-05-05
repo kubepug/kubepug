@@ -143,7 +143,7 @@ func DiscoverResourceName(client *discovery.DiscoveryClient, group, version, kin
 		if apierrors.IsForbidden(err) {
 			log.Fatalf("Failed to list object %s attribute. Permission denied! Please check if you have the proper authorization", gv)
 		}
-		log.Fatalf("Failed communicating with k8s while discovering the object name for %s. \nError: %v", gv, err)
+		log.Fatalf("Failed communicating with k8s while discovering the object name for %s. Error: %v", gv, err)
 	}
 	for i := range resources.APIResources {
 		apires := &resources.APIResources[i]

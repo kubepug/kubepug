@@ -23,14 +23,16 @@ var (
 )
 
 var (
-	k8sVersion      string
-	forceDownload   bool
-	apiWalk         bool
-	swaggerDir      string
-	showDescription bool
-	format          string
-	filename        string
-	logLevel        string
+	k8sVersion        string
+	forceDownload     bool
+	apiWalk           bool
+	errorOnDeprecated bool
+	errorOnDeleted    bool
+	swaggerDir        string
+	showDescription   bool
+	format            string
+	filename          string
+	logLevel          string
 
 	rootCmd = &cobra.Command{
 		Use:          filepath.Base(os.Args[0]),
@@ -90,6 +92,9 @@ func runPug(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s", string(bytes))
 	}
 
+	if (errorOnDeleted && len(result.DeletedAPIs) > 0) || (errorOnDeprecated && len(result.DeprecatedAPIs) > 0) {
+		return fmt.Errorf("found %d Deleted APIs and %d Deprecated APIs", len(result.DeletedAPIs), len(result.DeprecatedAPIs))
+	}
 	return nil
 }
 
@@ -117,6 +122,8 @@ func init() {
 	rootCmd.Flags().MarkHidden("user")                     // Ignoring error in deepsource. skipcq: GSC-G104
 
 	rootCmd.PersistentFlags().BoolVar(&apiWalk, "api-walk", true, "Wether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer. Defaults to true")
+	rootCmd.PersistentFlags().BoolVar(&errorOnDeprecated, "error-on-deprecated", false, "If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false")
+	rootCmd.PersistentFlags().BoolVar(&errorOnDeleted, "error-on-deleted", false, "If a deleted object is found, the program will exit with return code 1 instead of 0. Defaults to false")
 	rootCmd.PersistentFlags().BoolVar(&showDescription, "description", true, "Wether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true")
 	rootCmd.PersistentFlags().StringVar(&k8sVersion, "k8s-version", "master", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
 	rootCmd.PersistentFlags().StringVar(&swaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
