@@ -22,6 +22,9 @@ var (
 	kubernetesConfigFlags *genericclioptions.ConfigFlags
 )
 
+// The version var will be used to generate the --version command and is passed by goreleaser
+var version string
+
 var (
 	k8sVersion        string
 	forceDownload     bool
@@ -41,8 +44,16 @@ var (
 		Example:      filepath.Base(os.Args[0]),
 		Args:         cobra.MinimumNArgs(0),
 		RunE:         runPug,
+		Version:      getVersion(),
 	}
 )
+
+func getVersion() string {
+	if version == "" {
+		return "master branch"
+	}
+	return version
+}
 
 func runPug(cmd *cobra.Command, args []string) error {
 	config := lib.Config{
