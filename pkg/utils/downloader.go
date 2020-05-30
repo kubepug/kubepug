@@ -1,4 +1,4 @@
-package kubepug
+package utils
 
 import (
 	"fmt"
@@ -39,8 +39,8 @@ func downloadFile(filename, url string) error {
 	return err
 }
 
-// DownloadSwaggerFile checks wether a swagger.json file needs to be downloaded
-// and returns the file location to be used
+// DownloadSwaggerFile checks wether a swagger.json file needs to be downloaded,
+// download the file and returns the location to be used
 func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename string, err error) {
 
 	if swaggerdir == "" {

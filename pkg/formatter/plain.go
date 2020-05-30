@@ -3,7 +3,7 @@ package formatter
 import (
 	"fmt"
 
-	"github.com/rikatz/kubepug/pkg/kubepug"
+	"github.com/rikatz/kubepug/pkg/results"
 )
 
 type plain struct{}
@@ -12,7 +12,7 @@ func newPlainFormatter() Formatter {
 	return &plain{}
 }
 
-func (f *plain) Output(results kubepug.Result) ([]byte, error) {
+func (f *plain) Output(results results.Result) ([]byte, error) {
 	s := fmt.Sprintf("RESULTS:\nDeprecated APIs:\n\n")
 	for _, api := range results.DeprecatedAPIs {
 		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Kind, api.Group, api.Version)
@@ -31,7 +31,7 @@ func (f *plain) Output(results kubepug.Result) ([]byte, error) {
 	return []byte(s), nil
 }
 
-func listItems(items []kubepug.DeprecatedItem) string {
+func listItems(items []results.Item) string {
 	s := fmt.Sprintf("")
 	for _, i := range items {
 		if i.Namespace != "" {
