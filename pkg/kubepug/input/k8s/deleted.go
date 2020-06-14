@@ -1,4 +1,4 @@
-package kubepug
+package k8sinput
 
 import (
 	"context"
@@ -9,9 +9,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
+
+	"github.com/rikatz/kubepug/pkg/parser"
+	"github.com/rikatz/kubepug/pkg/results"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -91,10 +94,15 @@ func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface,
 	}
 }
 
-// WalkObjects walk through Kubernetes API and verifies which Resources doesn't exists anymore in swagger.json
-func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) (deleted []DeletedAPI) {
+// GetDeleted walk through Kubernetes API and verifies which Resources doesn't exists anymore in swagger.json
+func GetDeleted(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.ConfigFlags) (deleted []results.DeletedAPI) {
 
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
+	configRest, err := config.ToRESTConfig()
+	if err != nil {
+		log.Fatalf("Failed to create the K8s config parameters while listing Deleted objects")
+	}
+
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(configRest)
 	if err != nil {
 		log.Fatalf("Failed to create the K8s Discovery client")
 	}
@@ -108,7 +116,7 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) (deleted [
 		log.Fatalf("Failed communicating with k8s while discovering server resources. \nError: %v", err)
 	}
 
-	dynClient, err := dynamic.NewForConfig(config)
+	dynClient, err := dynamic.NewForConfig(configRest)
 	if err != nil {
 		log.Fatalf("Failed to create dynamic client. \nError: %v", err)
 	}
@@ -141,8 +149,8 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) (deleted [
 			if len(strings.Split(resource.Name, "/")) != 1 {
 				continue
 			}
-			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Name)
-			if _, ok := KubernetesAPIs[keyAPI]; !ok {
+			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Kind)
+			if _, ok := KubeAPIs[keyAPI]; !ok {
 				gv, err := schema.ParseGroupVersion(resourceGroupVersion.GroupVersion)
 				if err != nil {
 					log.Fatalf("Failed to Parse GroupVersion of Resource")
@@ -154,23 +162,23 @@ func (KubernetesAPIs KubernetesAPIs) WalkObjects(config *rest.Config) (deleted [
 				}
 
 				if apierrors.IsForbidden(err) {
-					log.Fatalf("Failed to list Server Resources of type %s/%s/%s. Permission denied! Please check if you have the proper authorization", gv.Group, gv.Version, resource.Name)
+					log.Fatalf("Failed to list Server Resources of type %s/%s/%s. Permission denied! Please check if you have the proper authorization", gv.Group, gv.Version, resource.Kind)
 				}
 
 				if err != nil {
-					log.Fatalf("Failed to List objects of type %s/%s/%s. \nError: %v", gv.Group, gv.Version, resource.Name, err)
+					log.Fatalf("Failed to List objects of type %s/%s/%s. \nError: %v", gv.Group, gv.Version, resource.Kind, err)
 				}
 
 				if len(list.Items) > 0 {
-					log.Debugf("Found %d deleted items in %s/%s", len(list.Items), gvr.GroupResource().String(), resource.Name)
-					d := DeletedAPI{
+					log.Debugf("Found %d deleted items in %s/%s", len(list.Items), gvr.Group, resource.Kind)
+					d := results.DeletedAPI{
 						Deleted: true,
 						Name:    resource.Name,
-						Group:   gvr.GroupResource().String(),
+						Group:   gvr.Group,
 						Kind:    resource.Kind,
 						Version: gv.Version,
 					}
-					d.Items = listObjects(list.Items)
+					d.Items = results.ListObjects(list.Items)
 					deleted = append(deleted, d)
 				}
 			}

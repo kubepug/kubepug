@@ -2,6 +2,9 @@ package lib
 
 import (
 	"github.com/rikatz/kubepug/pkg/kubepug"
+	"github.com/rikatz/kubepug/pkg/parser"
+	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/rikatz/kubepug/pkg/utils"
 	log "github.com/sirupsen/logrus"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -15,6 +18,7 @@ type Config struct {
 	APIWalk         bool
 	SwaggerDir      string
 	ShowDescription bool
+	Input           string
 	ConfigFlags     *genericclioptions.ConfigFlags
 }
 
@@ -29,39 +33,45 @@ func NewKubepug(config Config) *Kubepug {
 }
 
 // GetDeprecated returns the list of deprecated APIs
-func (k *Kubepug) GetDeprecated() (*kubepug.Result, error) {
-	log.Debugf("Getting the deprecated APIs")
-	var KubernetesAPIs kubepug.KubernetesAPIs = make(kubepug.KubernetesAPIs)
+func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
+	log.Debugf("Populating the KubernetesAPI map from swagger.json")
+
+	var KubernetesAPIs parser.KubernetesAPIs = make(parser.KubernetesAPIs)
 
 	log.Infof("Downloading the swagger.json file")
-	swaggerfile, err := kubepug.DownloadSwaggerFile(k.Config.K8sVersion, k.Config.SwaggerDir, k.Config.ForceDownload)
+	swaggerfile, err := utils.DownloadSwaggerFile(k.Config.K8sVersion, k.Config.SwaggerDir, k.Config.ForceDownload)
 
 	if err != nil {
-		return nil, err
-	}
-
-	k8sConfig, err := k.Config.ConfigFlags.ToRESTConfig()
-	log.Debugf("Will connect to cluster running in: %s", k8sConfig.Host)
-	if err != nil {
-		return nil, err
+		return &results.Result{}, err
 	}
 
 	log.Infof("Populating the Deprecated Kubernetes APIs Map")
-	err = KubernetesAPIs.PopulateKubeAPIMap(k8sConfig, swaggerfile)
+	err = KubernetesAPIs.PopulateKubeAPIMap(swaggerfile)
 
 	if err != nil {
-		return nil, err
+		return &results.Result{}, err
 	}
 
-	result := kubepug.Result{}
-	// First lets List all the deprecated APIs
-	log.Info("Getting existing objects that are marked as deprecated in swagger.json")
-	result.DeprecatedAPIs = KubernetesAPIs.ListDeprecated(k8sConfig, k.Config.ShowDescription)
+	log.Debugf("Kubernetes APIs Populated: %#v", KubernetesAPIs)
 
-	if k.Config.APIWalk {
-		log.Info("Getting existing objects that does not exist in swagger.json anymore")
-		result.DeletedAPIs = KubernetesAPIs.WalkObjects(k8sConfig)
+	result = k.getResults(KubernetesAPIs)
+
+	return result, nil
+}
+
+func (k *Kubepug) getResults(kubeapis parser.KubernetesAPIs) (result *results.Result) {
+	var inputMode kubepug.Deprecator
+	if k.Config.Input != "" {
+		inputMode = kubepug.NewFileInput(k.Config.Input, kubeapis)
+
+	} else {
+		inputMode = kubepug.K8sInput{
+			K8sconfig: k.Config.ConfigFlags,
+			K8sapi:    kubeapis,
+			Apiwalk:   k.Config.APIWalk,
+		}
 	}
+	results := kubepug.GetDeprecations(inputMode)
+	return &results
 
-	return &result, nil
 }
