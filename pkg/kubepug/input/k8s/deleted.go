@@ -108,7 +108,7 @@ func GetDeleted(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 	}
 
 	log.Debug("Getting all the Server Resources")
-	resourcesList, err := discoveryClient.ServerResources()
+	resourcesList, err := discoveryClient.ServerPreferredResources()
 	if err != nil {
 		if apierrors.IsForbidden(err) {
 			log.Fatalf("Failed to list Server Resources. Permission denied! Please check if you have the proper authorization")
