@@ -5,6 +5,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/rikatz/kubepug/pkg/results"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type stdout struct{}
@@ -18,6 +19,7 @@ var resourceColor = color.New(color.FgRed).Add(color.Bold).SprintFunc()
 var globalColor = color.New(color.FgBlue).Add(color.Bold).SprintFunc()
 var namespaceColor = color.New(color.FgCyan).Add(color.Bold).SprintFunc()
 var errorColor = color.New(color.FgWhite).Add(color.BgRed).Add(color.Bold).SprintFunc()
+var locationColor = color.New(color.FgHiMagenta).Add(color.Bold).SprintFunc()
 
 func (f *stdout) Output(results results.Result) ([]byte, error) {
 	s := fmt.Sprintf("%s:\n%s:\n\n", resourceColor("RESULTS"), resourceColor("Deprecated APIs"))
@@ -42,10 +44,18 @@ func (f *stdout) Output(results results.Result) ([]byte, error) {
 func stdoutListItems(items []results.Item) string {
 	s := fmt.Sprintf("")
 	for _, i := range items {
-		if i.Namespace != "" {
-			s = fmt.Sprintf("%s\t\t-> %s: %s %s %s\n", s, namespaceColor(i.Scope), i.ObjectName, namespaceColor("namespace:"), i.Namespace)
+		var fileLocation string
+		if i.Location != "" {
+			fileLocation = fmt.Sprintf("%s %s", locationColor("location:"), i.Location)
+		}
+
+		if i.Scope == "OBJECT" {
+			if i.Namespace == "" {
+				i.Namespace = metav1.NamespaceDefault
+			}
+			s = fmt.Sprintf("%s\t\t-> %s: %s %s %s %s\n", s, namespaceColor(i.Scope), i.ObjectName, namespaceColor("namespace:"), i.Namespace, fileLocation)
 		} else {
-			s = fmt.Sprintf("%s\t\t-> %s: %s \n", s, globalColor(i.Scope), i.ObjectName)
+			s = fmt.Sprintf("%s\t\t-> %s: %s %s\n", s, globalColor(i.Scope), i.ObjectName, fileLocation)
 		}
 	}
 	return s

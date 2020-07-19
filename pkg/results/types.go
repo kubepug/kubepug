@@ -17,7 +17,7 @@ type Item struct {
 	Scope      string `json,yaml:"scope,omitempty"`
 	ObjectName string `json,yaml:"objectname,omitempty"`
 	Namespace  string `json,yaml:"namespace,omitempty"`
-	Location   string `json,yaml:"location,omitempty"`
+	Location   string `json:"location,omitempty" yaml:"location,omitempty"`
 }
 
 // DeletedAPI definition of an API
