@@ -2,6 +2,7 @@ package k8sinput
 
 import (
 	"context"
+	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,15 +49,23 @@ func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 		//var prefResource ResourceStruct
 		group, version, kind := dpa.Group, dpa.Version, dpa.Kind
 
-		if _, ok := ResourceAndGV[kind]; !ok {
-			log.Debugf("Skipping the resource %s/%s/%s because it doesn't exists in the APIServer", group, version, kind)
+		var gvk string
+
+		if group != "" {
+			gvk = fmt.Sprintf("%s/%s/%s", group, version, kind)
+		} else {
+			gvk = fmt.Sprintf("%s/%s", version, kind)
+		}
+
+		if _, ok := ResourceAndGV[gvk]; !ok {
+			log.Debugf("Skipping the resource %s because it doesn't exists in the APIServer", gvk)
 			continue
 		}
 
-		prefResource := ResourceAndGV[kind]
+		prefResource := ResourceAndGV[gvk]
 
 		if prefResource.ResourceName == "" || prefResource.GroupVersion == "" {
-			log.Debugf("Skipping the resource %s/%s/%s because it doesn't exists in the APIServer", group, version, kind)
+			log.Debugf("Skipping the resource %s because it doesn't exists in the APIServer", gvk)
 			continue
 		}
 
