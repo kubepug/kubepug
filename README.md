@@ -9,8 +9,7 @@ KubePug/Deprecations is intended to be a kubectl plugin, which:
 
 * Downloads a swagger.json from a specific Kubernetes version
 * Parses this Json finding deprecation notices
-* Verifies the current kubernetes cluster checking wether exists objects in this deprecated API Versions, allowing the user to check before migrating
-* Helps Katz to be a better developer
+* Verifies the current kubernetes cluster or input files checking wether exists objects in this deprecated API Versions, allowing the user to check before migrating
 
 ## How to use it as a krew plugin
 
@@ -26,33 +25,72 @@ After that, the command can be used just as kubectl, but with the following flag
 $ kubepug --help
 [...]
 Flags:
-      --cluster string       The name of the kubeconfig cluster to use
-      --context string       The name of the kubeconfig context to use
-      --description          Wether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true (default true)
-      --force-download       Wether to force the download of a new swagger.json file even if one exists. Defaults to false
-  -h, --help                 help for kubectl
-      --k8s-version string   Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master (default "master")
-      --kubeconfig string    Path to the kubeconfig file to use for CLI requests.
-      --swagger-dir string   Where to keep swagger.json downloaded file. Defaults to current directory
+      --api-walk                 Wether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer. Defaults to true (default true)
+      --cluster string           The name of the kubeconfig cluster to use
+      --context string           The name of the kubeconfig context to use
+      --description              DEPRECATED FLAG - Wether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true (default true)
+      --error-on-deleted         If a deleted object is found, the program will exit with return code 1 instead of 0. Defaults to false
+      --error-on-deprecated      If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false
+      --filename string          Name of the file the results will be saved to, if empty it will display to stdout
+      --force-download           Wether to force the download of a new swagger.json file even if one exists. Defaults to false
+      --format string            Format in which the list will be displayed [stdout, plain, json, yaml] (default "stdout")
+  -h, --help                     help for kubepug
+      --input-file string        Location of a file or directory containing k8s manifests to be analized
+      --k8s-version string       Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master (default "master")
+      --kubeconfig string        Path to the kubeconfig file to use for CLI requests.
+      --swagger-dir string       Where to keep swagger.json downloaded file. If not provided will use the system temporary directory
+      --tls-server-name string   Server name to use for server certificate validation. If it is not provided, the hostname used to contact the server is used
+  -v, --verbosity string         Log level: debug, info, warn, error, fatal, panic (default "warning")
+      --version                  version for kubepug
+```
 
-$ kubepug --k8s-version=v1.17.0 # Will verify the current context against v1.17.0 swagger.json
-[...]
-ClusterRole found in rbac.authorization.k8s.io/v1beta1
-         ├─ ClusterRole is a cluster level, logical grouping of PolicyRules that can be referenced as a unit by a RoleBinding or ClusterRoleBinding. Deprecated in v1.17 in favor of rbac.authorization.k8s.io/v1 ClusterRole, and will no longer be served in v1.20.
-                -> GLOBAL: admin 
-                -> GLOBAL: cluster-admin 
-                -> GLOBAL: edit 
-
-NetworkPolicy found in extensions/v1beta1
-         ├─ DEPRECATED 1.9 - This group version of NetworkPolicy is deprecated by networking/v1/NetworkPolicy. NetworkPolicy describes what network traffic is allowed for a set of Pods
-                -> Object: ingress-to-backend namespace: development
-
-DaemonSet found in extensions/v1beta1
-         ├─ DEPRECATED - This group version of DaemonSet is deprecated by apps/v1beta2/DaemonSet. See the release notes for more information. DaemonSet represents the configuration of a daemon set.
-                -> Object: kindnet namespace: kube-system
-                -> Object: kube-proxy namespace: kube-system
+### Checking a Kubernetes Cluster
+You can check the status of a running cluster with the following command. 
 
 ```
+$ kubepug --k8s-version=v1.18.6 # Will verify the current context against v1.18.6 swagger.json
+[...]
+RESULTS:
+Deprecated APIs:
+
+Ingress found in extensions/v1beta1
+         ├─ Ingress is a collection of rules that allow inbound connections to reach the endpoints defined by a backend. An Ingress can be configured to give services externally-reachable urls, load balance traffic, terminate SSL, offer name based virtual hosting etc. DEPRECATED - This group version of Ingress is deprecated by networking.k8s.io/v1beta1 Ingress. See the release notes for more information.
+                -> OBJECT: nginxnok namespace: default
+                -> OBJECT: nginxok namespace: default
+
+
+Deleted APIs:
+
+DaemonSet found in extensions/v1beta1
+         ├─ API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!
+                -> OBJECT: kindnet namespace: kube-system
+                -> OBJECT: kube-proxy namespace: kube-system
+
+Deployment found in extensions/v1beta1
+         ├─ API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!
+                -> OBJECT: coredns namespace: kube-system
+                -> OBJECT: local-path-provisioner namespace: local-path-storage
+
+ReplicaSet found in extensions/v1beta1
+         ├─ API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!
+                -> OBJECT: coredns-6dcc67dcbc namespace: kube-system
+                -> OBJECT: local-path-provisioner-56fcf95c58 namespace: local-path-storage
+
+```
+
+### Putting Kubepug in your CI / Checking input files
+
+You can verify files with the following:
+
+```
+$ kubepug --input-file=./deployment/ --error-on-deleted --error-on-deprecated
+```
+
+With the command above
+* The swagger.json from master branch will be used
+* All YAML files (excluding subdirectories) will be verified 
+* The program will exit with an error if deprecated or deleted objects are found.
+
 
 ### Air-gapped environment
 
@@ -75,10 +113,6 @@ This will verify the current context against the swagger file we downloaded and 
 ## Screenshot
 
 ![Kubepug](assets/screenshot.png)
-
-## Todo
-
-* Add some Unit Tests
 
 ## References
 
