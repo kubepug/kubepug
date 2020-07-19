@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rikatz/kubepug/pkg/results"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type plain struct{}
@@ -34,10 +35,18 @@ func (f *plain) Output(results results.Result) ([]byte, error) {
 func listItems(items []results.Item) string {
 	s := fmt.Sprintf("")
 	for _, i := range items {
-		if i.Namespace != "" {
-			s = fmt.Sprintf("%s%s: %s namespace: %s\n", s, i.Scope, i.ObjectName, i.Namespace)
+		var fileLocation string
+		if i.Location != "" {
+			fileLocation = fmt.Sprintf("location: %s", i.Location)
+		}
+
+		if i.Scope == "OBJECT" {
+			if i.Namespace == "" {
+				i.Namespace = metav1.NamespaceDefault
+			}
+			s = fmt.Sprintf("%s%s: %s namespace: %s %s\n", s, i.Scope, i.ObjectName, i.Namespace, fileLocation)
 		} else {
-			s = fmt.Sprintf("%s%s: %s \n", s, i.Scope, i.ObjectName)
+			s = fmt.Sprintf("%s%s: %s %s\n", s, i.Scope, i.ObjectName, fileLocation)
 		}
 	}
 	return s
