@@ -1,6 +1,8 @@
 package k8sinput
 
 import (
+	"fmt"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/discovery"
 
@@ -39,7 +41,8 @@ func DiscoverResourceNameAndPreferredGV(client *discovery.DiscoveryClient) Prefe
 				GroupVersion: rl.GroupVersion,
 				ResourceName: resources.Name,
 			}
-			pr[resources.Kind] = item
+			gvk := fmt.Sprintf("%v/%v", rl.GroupVersion, resources.Kind)
+			pr[gvk] = item
 
 		}
 	}
