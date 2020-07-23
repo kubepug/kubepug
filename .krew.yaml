@@ -3,16 +3,15 @@ kind: Plugin
 metadata:
   name: deprecations
 spec:
-  shortDescription: >-    
+  shortDescription: >-
     Checks for deprecated objects in a cluster 
   homepage: https://github.com/rikatz/kubepug
   caveats: |
     * By default, deprecations finds deprecated object relative to the current kubernetes
     master branch. To target a different kubernetes release, use the --k8s-version
     argument.
-    
     * Deprecations needs permission to GET all objects in the Cluster
-  description: |     
+  description: |
     This plugin shows all the deprecated objects in a Kubernetes cluster allowing 
     the operator to verify them before upgrading the cluster. It uses the 
     swagger.json version available in master branch of Kubernetes repository
