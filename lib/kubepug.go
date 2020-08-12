@@ -19,6 +19,7 @@ type Config struct {
 	SwaggerDir      string
 	ShowDescription bool
 	Input           string
+	Monitor         bool
 	ConfigFlags     *genericclioptions.ConfigFlags
 }
 
@@ -69,6 +70,7 @@ func (k *Kubepug) getResults(kubeapis parser.KubernetesAPIs) (result *results.Re
 			K8sconfig: k.Config.ConfigFlags,
 			K8sapi:    kubeapis,
 			Apiwalk:   k.Config.APIWalk,
+			Monitor:   k.Config.Monitor,
 		}
 	}
 	results := kubepug.GetDeprecations(inputMode)

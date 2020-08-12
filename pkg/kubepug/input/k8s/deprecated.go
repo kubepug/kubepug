@@ -38,6 +38,9 @@ func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 		log.Fatalf("Failed to create the K8s Discovery client")
 	}
 
+	// this is not discuvering everything.
+	// does not find  rbac.authorization.k8s.io/v1beta1/ClusterRole in kube 1.18
+	// or its actually just assessing the current things, not what could be...
 	ResourceAndGV := DiscoverResourceNameAndPreferredGV(disco)
 
 	for _, dpa := range KubeAPIs {
@@ -69,7 +72,7 @@ func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 			continue
 		}
 
-		gv, err := schema.ParseGroupVersion(prefResource.GroupVersion)
+		gv, err := schema.ParseGroupVersion(prefResource.GroupVersion) // this seems like an unnecessary intermmediary
 		if err != nil {
 			log.Warnf("Failed to parse GroupVersion %s of resource %s existing in the API Server", prefResource.GroupVersion, prefResource.ResourceName)
 		}

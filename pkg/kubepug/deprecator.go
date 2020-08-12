@@ -13,6 +13,7 @@ type Deprecator interface {
 
 // GetDeprecations returns the results of the comparision between the Input and the APIs
 func GetDeprecations(d Deprecator) (result results.Result) {
+	// TODO(igaskin):  wrapp this in a ticker to emitt prom metrics
 	result.DeprecatedAPIs = d.ListDeprecated()
 	result.DeletedAPIs = d.ListDeleted()
 	return result

@@ -36,6 +36,7 @@ var (
 	format            string
 	filename          string
 	inputFile         string
+	monitor           bool
 	logLevel          string
 
 	rootCmd = &cobra.Command{
@@ -65,6 +66,7 @@ func runPug(cmd *cobra.Command, args []string) error {
 		ShowDescription: showDescription,
 		ConfigFlags:     kubernetesConfigFlags,
 		Input:           inputFile,
+		Monitor:         monitor,
 	}
 
 	lvl, err := logrus.ParseLevel(logLevel)
@@ -118,6 +120,7 @@ func init() {
 		rootCmd.Example = cmdValue
 	}
 
+	// TODO(igaskin): change the kube client to support running intra-cluster
 	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(rootCmd.Flags())
 
@@ -138,6 +141,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&errorOnDeprecated, "error-on-deprecated", false, "If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false")
 	rootCmd.PersistentFlags().BoolVar(&errorOnDeleted, "error-on-deleted", false, "If a deleted object is found, the program will exit with return code 1 instead of 0. Defaults to false")
 	rootCmd.PersistentFlags().BoolVar(&showDescription, "description", true, "DEPRECATED FLAG - Whether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true")
+	rootCmd.PersistentFlags().BoolVar(&monitor, "monitor", true, "run kubepug as a persistant prometheus server to monitor deprocations")
 	rootCmd.PersistentFlags().StringVar(&k8sVersion, "k8s-version", "master", "Which Kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
 	rootCmd.PersistentFlags().StringVar(&swaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
 	rootCmd.PersistentFlags().BoolVar(&forceDownload, "force-download", false, "Whether to force the download of a new swagger.json file even if one exists. Defaults to false")
