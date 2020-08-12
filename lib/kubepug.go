@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rikatz/kubepug/pkg/kubepug"
 	"github.com/rikatz/kubepug/pkg/parser"
 	"github.com/rikatz/kubepug/pkg/results"
@@ -13,14 +14,16 @@ import (
 // Config configuration object for Kubepug
 // configurations for kubernetes and for kubepug functionality
 type Config struct {
-	K8sVersion      string
-	ForceDownload   bool
-	APIWalk         bool
-	SwaggerDir      string
-	ShowDescription bool
-	Input           string
-	Monitor         bool
-	ConfigFlags     *genericclioptions.ConfigFlags
+	K8sVersion       string
+	ForceDownload    bool
+	APIWalk          bool
+	SwaggerDir       string
+	ShowDescription  bool
+	Input            string
+	Monitor          bool
+	DeprecatedMetric *prometheus.CounterVec
+	DeletedMetric    *prometheus.CounterVec
+	ConfigFlags      *genericclioptions.ConfigFlags
 }
 
 // Kubepug struct to be used
@@ -74,6 +77,8 @@ func (k *Kubepug) getResults(kubeapis parser.KubernetesAPIs) (result *results.Re
 		}
 	}
 	results := kubepug.GetDeprecations(inputMode)
+	kubepug.MeasureDeprecations(results, *k.Config.DeprecatedMetric)
+	kubepug.MeasureDeletions(results, *k.Config.DeletedMetric)
 	return &results
 
 }

@@ -3,11 +3,15 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"time"
 
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
 	"github.com/sirupsen/logrus"
@@ -48,6 +52,18 @@ var (
 		RunE:         runPug,
 		Version:      getVersion(),
 	}
+
+	deletedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help: "Counter of deleted APIs",
+		Name: "deleted_apis_count",
+	},
+		[]string{"group", "kind", "version", "name", "scope", "objectname", "namespace"})
+
+	deprecatedCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Help: "Counter of deprecated APIs",
+		Name: "deprecated_apis_count",
+	},
+		[]string{"group", "kind", "version", "name", "scope", "objectname", "namespace"})
 )
 
 func getVersion() string {
@@ -59,14 +75,16 @@ func getVersion() string {
 
 func runPug(cmd *cobra.Command, args []string) error {
 	config := lib.Config{
-		K8sVersion:      k8sVersion,
-		ForceDownload:   forceDownload,
-		APIWalk:         apiWalk,
-		SwaggerDir:      swaggerDir,
-		ShowDescription: showDescription,
-		ConfigFlags:     kubernetesConfigFlags,
-		Input:           inputFile,
-		Monitor:         monitor,
+		K8sVersion:       k8sVersion,
+		ForceDownload:    forceDownload,
+		APIWalk:          apiWalk,
+		SwaggerDir:       swaggerDir,
+		ShowDescription:  showDescription,
+		ConfigFlags:      kubernetesConfigFlags,
+		Input:            inputFile,
+		Monitor:          monitor,
+		DeprecatedMetric: deprecatedCounter,
+		DeletedMetric:    deletedCounter,
 	}
 
 	lvl, err := logrus.ParseLevel(logLevel)
@@ -149,6 +167,13 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
 	rootCmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analysed")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
+
+	prometheus.MustRegister(deprecatedCounter)
+	prometheus.MustRegister(deletedCounter)
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe("0.0.0.0:8888", nil)
+	}()
 }
 
 func main() {
@@ -156,4 +181,5 @@ func main() {
 		log.Errorf("An error has ocurred: %v", err)
 		os.Exit(1)
 	}
+	time.Sleep(100 * time.Hour)
 }

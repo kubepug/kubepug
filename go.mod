@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/fatih/color v1.9.0
+	github.com/prometheus/client_golang v1.7.1
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v0.0.7
 	gopkg.in/yaml.v3 v3.0.0-20200506231410-2ff61e1afc86
