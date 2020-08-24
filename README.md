@@ -116,7 +116,6 @@ name: Sample CI Workflow
 # This workflow is triggered on pushes to the repository.
 on: [push]
 env:
-  KUBEPUG_VERSION: "v1.1.0"
   HELM_VERSION: "v3.2.4"
   K8S_TARGET_VERSION: "v1.16.0"
 
@@ -130,7 +129,7 @@ jobs:
       - name: Install Helm and Kubepug binaries
         run: |
           mkdir -p ~/bin
-          curl -sSL https://github.com/rikatz/kubepug/releases/download/${KUBEPUG_VERSION}/kubepug_linux_amd64.tar.gz | tar xvfz - --overwrite -C ~/bin/
+          curl -sSL https://github.com/rikatz/kubepug/latest/download/kubepug_linux_amd64.tar.gz | tar xvfz - --overwrite -C ~/bin/
           curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar xvfz - -C ~/bin/ --wildcards --strip 1 '*/helm'
       
       - name: Run Kubepug with your Helm Charts Repository
