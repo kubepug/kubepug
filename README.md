@@ -129,7 +129,7 @@ jobs:
       - name: Install Helm and Kubepug binaries
         run: |
           mkdir -p ~/bin
-          curl -sSL https://github.com/rikatz/kubepug/latest/download/kubepug_linux_amd64.tar.gz | tar xvfz - --overwrite -C ~/bin/
+          curl -sSL https://github.com/rikatz/kubepug/releases/latest/download/kubepug_linux_amd64.tar.gz | tar xvfz - --overwrite -C ~/bin/
           curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar xvfz - -C ~/bin/ --wildcards --strip 1 '*/helm'
       
       - name: Run Kubepug with your Helm Charts Repository
