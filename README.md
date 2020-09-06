@@ -110,6 +110,32 @@ Steps to follow:
 
 This will verify the current context against the swagger file we downloaded and copied over manually
 
+### Example of Usage in CI with Github Actions
+```
+name: Sample CI Workflow
+# This workflow is triggered on pushes to the repository.
+on: [push]
+env:
+  HELM_VERSION: "v3.2.4"
+  K8S_TARGET_VERSION: "v1.16.0"
+
+jobs:
+ api-deprecations-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check-out repo
+        uses: actions/checkout@v2
+
+      - name: Install Helm and Kubepug binaries
+        run: |
+          mkdir -p ~/bin
+          curl -sSL https://github.com/rikatz/kubepug/releases/latest/download/kubepug_linux_amd64.tar.gz | tar xvfz - --overwrite -C ~/bin/
+          curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar xvfz - -C ~/bin/ --wildcards --strip 1 '*/helm'
+      
+      - name: Run Kubepug with your Helm Charts Repository
+        run: |
+          find charts -mindepth 1 -maxdepth 1 -type d | xargs -t -n1 -I% /bin/bash -c '~/bin/helm template % --api-versions ${K8S_TARGET_VERSION} | ~/bin/kubepug --error-on-deprecated --error-on-deleted --k8s-version ${K8S_TARGET_VERSION} --input-file /dev/stdin'
+```
 ## Screenshot
 
 ![Kubepug](assets/screenshot.png)
