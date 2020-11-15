@@ -14,7 +14,7 @@ func newPlainFormatter() Formatter {
 }
 
 func (f *plain) Output(results results.Result) ([]byte, error) {
-	s := fmt.Sprintf("RESULTS:\nDeprecated APIs:\n\n")
+	s := "RESULTS:\nDeprecated APIs:\n\n"
 	for _, api := range results.DeprecatedAPIs {
 		s = fmt.Sprintf("%s%s found in %s/%s\n", s, api.Kind, api.Group, api.Version)
 		if api.Description != "" {
@@ -33,7 +33,7 @@ func (f *plain) Output(results results.Result) ([]byte, error) {
 }
 
 func listItems(items []results.Item) string {
-	s := fmt.Sprintf("")
+	s := ""
 	for _, i := range items {
 		var fileLocation string
 		if i.Location != "" {

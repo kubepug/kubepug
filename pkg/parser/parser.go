@@ -32,8 +32,7 @@ func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(swaggerfile string) (err error
 	}
 	err = json.Unmarshal(byteValue, &definitionsMap)
 	if err != nil {
-		log.Warning("Error parsing the JSON, file might me invalid")
-		return err
+		return fmt.Errorf("error parsing the JSON, file might be invalid: %v", err)
 	}
 	definitions := definitionsMap["definitions"].(map[string]interface{})
 
@@ -85,7 +84,7 @@ func getKubeAPIValues(value map[string]interface{}) (KubeAPI, bool) {
 
 	description, found, err := unstructured.NestedString(value, "description")
 
-	if !found || err != nil {
+	if !found || err != nil || description == "" {
 		log.Debugf("Marking the resource as invalid because it doesn't contain a description")
 		return KubeAPI{}, false
 	}
