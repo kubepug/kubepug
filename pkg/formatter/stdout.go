@@ -42,7 +42,7 @@ func (f *stdout) Output(results results.Result) ([]byte, error) {
 }
 
 func stdoutListItems(items []results.Item) string {
-	s := fmt.Sprintf("")
+	s := ""
 	for _, i := range items {
 		var fileLocation string
 		if i.Location != "" {
