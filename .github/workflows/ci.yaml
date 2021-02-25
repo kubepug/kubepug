@@ -30,6 +30,16 @@ jobs:
     
     - name: Run Golint
       run: go get -u golang.org/x/lint/golint && golint -set_exit_status ./... 
+    
+    - name: Run Gosec Security Scanner
+      uses: securego/gosec@master
+      with:
+        # we let the report trigger content trigger a failure using the GitHub Security features.
+        args: '-no-fail -fmt sarif -out results.sarif ./...'
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+         sarif_file: results.sarif
 
     - name: Run Unit Tests
       run: go test ./...
