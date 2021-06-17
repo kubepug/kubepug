@@ -9,7 +9,7 @@ KubePug/Deprecations is intended to be a kubectl plugin, which:
 
 * Downloads a swagger.json from a specific Kubernetes version
 * Parses this Json finding deprecation notices
-* Verifies the current kubernetes cluster or input files checking wether exists objects in this deprecated API Versions, allowing the user to check before migrating
+* Verifies the current kubernetes cluster or input files checking whether exists objects in this deprecated API Versions, allowing the user to check before migrating
 
 ## How to use it as a krew plugin
 
@@ -25,14 +25,14 @@ After that, the command can be used just as kubectl, but with the following flag
 $ kubepug --help
 [...]
 Flags:
-      --api-walk                 Wether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer. Defaults to true (default true)
+      --api-walk                 Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer. Defaults to true (default true)
       --cluster string           The name of the kubeconfig cluster to use
       --context string           The name of the kubeconfig context to use
-      --description              DEPRECATED FLAG - Wether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true (default true)
+      --description              DEPRECATED FLAG - Whether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true (default true)
       --error-on-deleted         If a deleted object is found, the program will exit with return code 1 instead of 0. Defaults to false
       --error-on-deprecated      If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false
       --filename string          Name of the file the results will be saved to, if empty it will display to stdout
-      --force-download           Wether to force the download of a new swagger.json file even if one exists. Defaults to false
+      --force-download           Whether to force the download of a new swagger.json file even if one exists. Defaults to false
       --format string            Format in which the list will be displayed [stdout, plain, json, yaml] (default "stdout")
   -h, --help                     help for kubepug
       --input-file string        Location of a file or directory containing k8s manifests to be analized
