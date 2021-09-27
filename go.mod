@@ -1,6 +1,6 @@
 module github.com/rikatz/kubepug
 
-go 1.15
+go 1.17
 
 require (
 	github.com/fatih/color v1.13.0
