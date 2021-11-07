@@ -34,7 +34,7 @@ type Info struct {
 	Platform     string
 }
 
-func VersionInfo() Info {
+func GetVersionInfo() Info {
 	return Info{
 		GitVersion:   GitVersion,
 		GitCommit:    gitCommit,

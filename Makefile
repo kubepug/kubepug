@@ -43,7 +43,6 @@ release:
 snapshot:
 	LDFLAGS="$(LDFLAGS)" goreleaser release --skip-sign --skip-publish --snapshot --rm-dist
 
-
 .PHONY: clean
 clean:
 	rm -rf kubepug

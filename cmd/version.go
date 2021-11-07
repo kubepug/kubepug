@@ -18,7 +18,7 @@ func Version() *cobra.Command {
 		Long:  "Prints the kubepug version",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			v := version.VersionInfo()
+			v := version.GetVersionInfo()
 			res := v.String()
 			if outputJSON {
 				j, err := v.JSONString()

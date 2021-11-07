@@ -29,8 +29,15 @@ jobs:
       run: go mod tidy && git diff --no-patch --exit-code
 
     - name: Run Unit Tests
-      run: go test ./...
+      run: make test
 
     - name: Verify building
-      run: go build -o ./kubepug cmd/kubepug.go
+      run: make build
 
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        install-only: true
+
+    - name: Verify goreleaser
+      run: make snapshot
