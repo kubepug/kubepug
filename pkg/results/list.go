@@ -14,5 +14,6 @@ func ListObjects(items []unstructured.Unstructured) (deprecatedItems []Item) {
 			deprecatedItems = append(deprecatedItems, Item{Scope: "GLOBAL", ObjectName: name})
 		}
 	}
+
 	return deprecatedItems
 }

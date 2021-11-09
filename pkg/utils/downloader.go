@@ -10,14 +10,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const baseURL = "https://raw.githubusercontent.com/kubernetes/kubernetes"
-const fileURL = "api/openapi-spec/swagger.json"
+const (
+	baseURL = "https://raw.githubusercontent.com/kubernetes/kubernetes"
+	fileURL = "api/openapi-spec/swagger.json"
+)
 
 // From https://golangcode.com/download-a-file-from-a-url/ which was easier than create :P
 func downloadFile(filename, url string) error {
 	// Get the data
 	log.Debugf("Downloading file from %s", url)
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) // nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -36,19 +38,20 @@ func downloadFile(filename, url string) error {
 
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
+
 	return err
 }
 
 // DownloadSwaggerFile checks whether a swagger.json file needs to be downloaded,
 // download the file and returns the location to be used
 func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename string, err error) {
-
 	if swaggerdir == "" {
 		swaggerdir, err = ioutil.TempDir("", "kubepug")
 		if err != nil {
 			return "", err
 		}
 	}
+
 	dir, err := os.Stat(swaggerdir)
 	if os.IsNotExist(err) || !dir.IsDir() {
 		return "", fmt.Errorf("directory %s does not exist or is already created as a file", swaggerdir)
@@ -64,6 +67,7 @@ func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename strin
 		if err != nil {
 			return "", err
 		}
+
 		return filename, nil
 	}
 

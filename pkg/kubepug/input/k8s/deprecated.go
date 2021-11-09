@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -13,12 +14,10 @@ import (
 
 	"github.com/rikatz/kubepug/pkg/parser"
 	"github.com/rikatz/kubepug/pkg/results"
-	log "github.com/sirupsen/logrus"
 )
 
 // GetDeprecated receives the Map of Deprecated API and List the existent Deprecated Objects in the Cluster
-func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.ConfigFlags) (deprecated []results.DeprecatedAPI) {
-
+func GetDeprecated(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.ConfigFlags) (deprecated []results.DeprecatedAPI) {
 	var resourceName string
 
 	configRest, err := config.ToRESTConfig()
@@ -33,22 +32,19 @@ func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 
 	// Feed the KubeAPIs with the resourceName as this is used to the K8s Resource lister
 	disco, err := discovery.NewDiscoveryClientForConfig(configRest)
-
 	if err != nil {
 		log.Fatalf("Failed to create the K8s Discovery client")
 	}
 
 	ResourceAndGV := DiscoverResourceNameAndPreferredGV(disco)
 
-	for _, dpa := range KubeAPIs {
+	for _, dpa := range kubeAPIs {
 		// We only want deprecated APIs :)
 		if !dpa.Deprecated {
 			continue
 		}
 
-		//var prefResource ResourceStruct
 		group, version, kind := dpa.Group, dpa.Version, dpa.Kind
-
 		var gvk string
 
 		if group != "" {
@@ -73,6 +69,7 @@ func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 		if err != nil {
 			log.Warnf("Failed to parse GroupVersion %s of resource %s existing in the API Server", prefResource.GroupVersion, prefResource.ResourceName)
 		}
+
 		gvrPreferred := gv.WithResource(prefResource.ResourceName)
 
 		log.Debugf("Listing objects for %s/%s/%s", group, version, prefResource.ResourceName)
@@ -81,9 +78,11 @@ func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 		if apierrors.IsNotFound(err) {
 			continue
 		}
+
 		if apierrors.IsForbidden(err) {
 			log.Fatalf("Failed to list objects in the cluster. Permission denied! Please check if you have the proper authorization")
 		}
+
 		if err != nil {
 			log.Fatalf("Failed communicating with k8s while listing objects. \nError: %v", err)
 		}
@@ -93,17 +92,16 @@ func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 			log.Infof("Listing objects for Preferred %s/%s", prefResource.GroupVersion, prefResource.ResourceName)
 
 			listPref, err := client.Resource(gvrPreferred).List(context.TODO(), metav1.ListOptions{})
-
 			if apierrors.IsForbidden(err) {
 				log.Fatalf("Failed to list objects in the cluster. Permission denied! Please check if you have the proper authorization")
 			}
+
 			if err != nil && !apierrors.IsNotFound(err) {
 				log.Fatalf("Failed communicating with k8s while listing objects. \nError: %v", err)
 			}
-
 			// If len of the lists is the same we can "assume" they're the same list
 			if len(list.Items) == len(listPref.Items) {
-				log.Infof("%s/%s/%s contains the same lenght of %d items that preferred %s/%s with %d items, skipping", group, version, kind, len(list.Items), prefResource.GroupVersion, kind, len(listPref.Items))
+				log.Infof("%s/%s/%s contains the same length of %d items that preferred %s/%s with %d items, skipping", group, version, kind, len(list.Items), prefResource.GroupVersion, kind, len(listPref.Items))
 				continue
 			}
 		}
@@ -123,5 +121,6 @@ func GetDeprecated(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 			deprecated = append(deprecated, api)
 		}
 	}
+
 	return deprecated
 }

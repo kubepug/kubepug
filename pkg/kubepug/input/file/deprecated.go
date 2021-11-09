@@ -7,10 +7,9 @@ import (
 
 // GetDeprecated retrieves the map of FileItems and compares with Kubernetes swagger.json
 // returning the set of Deprecated results
-func GetDeprecated(FileItems FileItems, KubeAPIs parser.KubernetesAPIs) (deprecated []results.DeprecatedAPI) {
-
-	for key, item := range FileItems {
-		if kubeapi, ok := KubeAPIs[key]; ok {
+func GetDeprecated(fileItems FileItems, kubeAPIs parser.KubernetesAPIs) (deprecated []results.DeprecatedAPI) {
+	for key, item := range fileItems {
+		if kubeapi, ok := kubeAPIs[key]; ok {
 			if kubeapi.Deprecated {
 				api := results.DeprecatedAPI{
 					Kind:        kubeapi.Kind,
@@ -27,5 +26,4 @@ func GetDeprecated(FileItems FileItems, KubeAPIs parser.KubernetesAPIs) (depreca
 	}
 
 	return deprecated
-
 }

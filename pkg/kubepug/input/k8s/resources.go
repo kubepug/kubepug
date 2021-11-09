@@ -3,10 +3,9 @@ package k8sinput
 import (
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/discovery"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // ResourceStruct define a Group/Version/ResourceName to be used in the PreferredResource Map
@@ -22,7 +21,6 @@ type PreferredResource map[string]ResourceStruct
 // as you've to pass group/version/name (and not group/version/kind) to client.resource.List
 // and also to verify if the server supports newer version of some API and it's not deprecated
 func DiscoverResourceNameAndPreferredGV(client *discovery.DiscoveryClient) PreferredResource {
-
 	pr := make(PreferredResource)
 
 	resourcelist, err := client.ServerPreferredResources()
@@ -33,18 +31,21 @@ func DiscoverResourceNameAndPreferredGV(client *discovery.DiscoveryClient) Prefe
 		if apierrors.IsForbidden(err) {
 			log.Fatalf("Failed to list objects for Name discovery. Permission denied! Please check if you have the proper authorization")
 		}
+
 		log.Fatalf("Failed communicating with k8s while discovering the object preferred name and gv. Error: %v", err)
 	}
+
 	for _, rl := range resourcelist {
-		for _, resources := range rl.APIResources {
+		for i := range rl.APIResources {
 			item := ResourceStruct{
 				GroupVersion: rl.GroupVersion,
-				ResourceName: resources.Name,
+				ResourceName: rl.APIResources[i].Name,
 			}
-			gvk := fmt.Sprintf("%v/%v", rl.GroupVersion, resources.Kind)
-			pr[gvk] = item
 
+			gvk := fmt.Sprintf("%v/%v", rl.GroupVersion, rl.APIResources[i].Kind)
+			pr[gvk] = item
 		}
 	}
+
 	return pr
 }

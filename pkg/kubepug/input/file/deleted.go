@@ -8,14 +8,11 @@ import (
 )
 
 // GetDeleted takes a set of FileItems and checks if they still exists in the API
-func GetDeleted(FileItems FileItems, KubeAPIs parser.KubernetesAPIs) (deleted []results.DeletedAPI) {
-
-	for key, item := range FileItems {
-
+func GetDeleted(fileItems FileItems, kubeAPIs parser.KubernetesAPIs) (deleted []results.DeletedAPI) {
+	for key, item := range fileItems {
 		// Here we want to skip CRDs, so if there's some object with Group like "pug.rkatz.io" we will skip
 		// Valid groups does not contain "." in the middle (like "apps/v1") or if so, they contain the reserved
 		// "k8s.io" (like "scheduling.k8s.io")
-
 		var group, version, kind string
 		gvk := strings.Split(key, "/")
 		if len(gvk) > 2 {
@@ -28,11 +25,9 @@ func GetDeleted(FileItems FileItems, KubeAPIs parser.KubernetesAPIs) (deleted []
 		} else {
 			version = gvk[0]
 			kind = gvk[1]
-
 		}
 
-		if _, ok := KubeAPIs[key]; !ok {
-
+		if _, ok := kubeAPIs[key]; !ok {
 			api := results.DeletedAPI{
 				Kind:    kind,
 				Deleted: true,
@@ -42,10 +37,8 @@ func GetDeleted(FileItems FileItems, KubeAPIs parser.KubernetesAPIs) (deleted []
 
 			api.Items = item
 			deleted = append(deleted, api)
-
 		}
 	}
 
 	return deleted
-
 }

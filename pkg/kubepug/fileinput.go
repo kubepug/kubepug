@@ -13,22 +13,23 @@ type FileInput struct {
 }
 
 // NewFileInput returns the struct FileInput already populated
-func NewFileInput(location string, K8sapi parser.KubernetesAPIs) (FileInput FileInput) {
+func NewFileInput(location string, k8sapi parser.KubernetesAPIs) (fileInput FileInput) {
+	fileInput.K8sapi = k8sapi
+	fileInput.FileItems = fileinput.GetFileItems(location)
 
-	FileInput.K8sapi = K8sapi
-	FileInput.FileItems = fileinput.GetFileItems(location)
-
-	return FileInput
+	return fileInput
 }
 
 // ListDeprecated lists the deprecated objects from a FileInput file
 func (i FileInput) ListDeprecated() (deprecatedapis []results.DeprecatedAPI) {
 	deprecatedapis = fileinput.GetDeprecated(i.FileItems, i.K8sapi)
+
 	return deprecatedapis
 }
 
-// ListDeleted lists the non-existend objects in some K8s version from a FileInput file
+// ListDeleted lists the non-existing objects in some K8s version from a FileInput file
 func (i FileInput) ListDeleted() (deletedapis []results.DeletedAPI) {
 	deletedapis = fileinput.GetDeleted(i.FileItems, i.K8sapi)
+
 	return deletedapis
 }
