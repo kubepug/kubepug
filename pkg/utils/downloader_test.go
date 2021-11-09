@@ -62,7 +62,6 @@ func TestDownloadSwaggerFile(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			if tc.createDir {
 				newdir := fmt.Sprintf("%s/swagger-%s.json", tc.swaggerdir, tc.version)
 				if _, err := os.Stat(newdir); os.IsNotExist(err) {
@@ -71,7 +70,6 @@ func TestDownloadSwaggerFile(t *testing.T) {
 						t.Fatalf("Failed to create the temporary directory %s: %v", newdir, err)
 					}
 				}
-
 			}
 
 			file, err := DownloadSwaggerFile(tc.version, tc.swaggerdir, tc.force)
@@ -82,7 +80,6 @@ func TestDownloadSwaggerFile(t *testing.T) {
 			if tc.filename != file {
 				t.Errorf("expected file %s, got file %s", tc.filename, file)
 			}
-
 		})
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -15,15 +16,15 @@ import (
 
 	"github.com/rikatz/kubepug/pkg/parser"
 	"github.com/rikatz/kubepug/pkg/results"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // ignoreStruct is an empty map, the key is the API Group to be ignored. No value exists
 type ignoreStruct map[string]struct{}
 
-const crdGroup = "apiextensions.k8s.io"
-const apiRegistration = "apiregistration.k8s.io"
+const (
+	crdGroup        = "apiextensions.k8s.io"
+	apiRegistration = "apiregistration.k8s.io"
+)
 
 // This function will receive an apiExtension (CRD) and populate it into the struct to be verified later
 func (ignoreStruct ignoreStruct) populateCRDGroups(dynClient dynamic.Interface, version string) {
@@ -95,8 +96,7 @@ func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface,
 }
 
 // GetDeleted walk through Kubernetes API and verifies which Resources doesn't exists anymore in swagger.json
-func GetDeleted(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.ConfigFlags) (deleted []results.DeletedAPI) {
-
+func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.ConfigFlags) (deleted []results.DeletedAPI) {
 	configRest, err := config.ToRESTConfig()
 	if err != nil {
 		log.Fatalf("Failed to create the K8s config parameters while listing Deleted objects")
@@ -113,6 +113,7 @@ func GetDeleted(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 		if apierrors.IsForbidden(err) {
 			log.Fatalf("Failed to list Server Resources. Permission denied! Please check if you have the proper authorization")
 		}
+
 		log.Fatalf("Failed communicating with k8s while discovering server resources. \nError: %v", err)
 	}
 
@@ -122,13 +123,13 @@ func GetDeleted(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 	}
 
 	var ignoreObjects ignoreStruct = make(map[string]struct{})
-
 	// Discovery CRDs versions to populate CRDs
 	for _, resources := range resourcesList {
 		if strings.Contains(resources.GroupVersion, crdGroup) {
 			version := strings.Split(resources.GroupVersion, "/")[1]
 			ignoreObjects.populateCRDGroups(dynClient, version)
 		}
+
 		if strings.Contains(resources.GroupVersion, apiRegistration) {
 			version := strings.Split(resources.GroupVersion, "/")[1]
 			ignoreObjects.populateAPIService(dynClient, version)
@@ -137,7 +138,6 @@ func GetDeleted(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 
 	log.Debugf("Walking through %d resource types", len(resourcesList))
 	for _, resourceGroupVersion := range resourcesList {
-
 		// We dont want CRDs or APIExtensions to be walked
 		if _, ok := ignoreObjects[strings.Split(resourceGroupVersion.GroupVersion, "/")[0]]; ok {
 			continue
@@ -149,8 +149,9 @@ func GetDeleted(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 			if len(strings.Split(resource.Name, "/")) != 1 {
 				continue
 			}
+
 			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Kind)
-			if _, ok := KubeAPIs[keyAPI]; !ok {
+			if _, ok := kubeAPIs[keyAPI]; !ok {
 				gv, err := schema.ParseGroupVersion(resourceGroupVersion.GroupVersion)
 				if err != nil {
 					log.Fatalf("Failed to Parse GroupVersion of Resource")
@@ -178,11 +179,13 @@ func GetDeleted(KubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 						Kind:    resource.Kind,
 						Version: gv.Version,
 					}
+
 					d.Items = results.ListObjects(list.Items)
 					deleted = append(deleted, d)
 				}
 			}
 		}
 	}
+
 	return deleted
 }

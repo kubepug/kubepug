@@ -1,13 +1,13 @@
 package lib
 
 import (
+	log "github.com/sirupsen/logrus"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+
 	"github.com/rikatz/kubepug/pkg/kubepug"
 	"github.com/rikatz/kubepug/pkg/parser"
 	"github.com/rikatz/kubepug/pkg/results"
 	"github.com/rikatz/kubepug/pkg/utils"
-	log "github.com/sirupsen/logrus"
-
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // Config configuration object for Kubepug
@@ -36,34 +36,32 @@ func NewKubepug(config Config) *Kubepug {
 func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
 	log.Debugf("Populating the KubernetesAPI map from swagger.json")
 
-	var KubernetesAPIs parser.KubernetesAPIs = make(parser.KubernetesAPIs)
+	kubernetesAPIs := make(parser.KubernetesAPIs)
 
 	log.Infof("Downloading the swagger.json file")
 	swaggerfile, err := utils.DownloadSwaggerFile(k.Config.K8sVersion, k.Config.SwaggerDir, k.Config.ForceDownload)
-
 	if err != nil {
 		return &results.Result{}, err
 	}
 
 	log.Infof("Populating the Deprecated Kubernetes APIs Map")
-	err = KubernetesAPIs.PopulateKubeAPIMap(swaggerfile)
+	err = kubernetesAPIs.PopulateKubeAPIMap(swaggerfile)
 
 	if err != nil {
 		return &results.Result{}, err
 	}
 
-	log.Debugf("Kubernetes APIs Populated: %#v", KubernetesAPIs)
+	log.Debugf("Kubernetes APIs Populated: %#v", kubernetesAPIs)
 
-	result = k.getResults(KubernetesAPIs)
+	result = k.getResults(kubernetesAPIs)
 
 	return result, nil
 }
 
-func (k *Kubepug) getResults(kubeapis parser.KubernetesAPIs) (result *results.Result) {
+func (k *Kubepug) getResults(kubeapis parser.KubernetesAPIs) *results.Result {
 	var inputMode kubepug.Deprecator
 	if k.Config.Input != "" {
 		inputMode = kubepug.NewFileInput(k.Config.Input, kubeapis)
-
 	} else {
 		inputMode = kubepug.K8sInput{
 			K8sconfig: k.Config.ConfigFlags,
@@ -71,7 +69,7 @@ func (k *Kubepug) getResults(kubeapis parser.KubernetesAPIs) (result *results.Re
 			Apiwalk:   k.Config.APIWalk,
 		}
 	}
-	results := kubepug.GetDeprecations(inputMode)
-	return &results
 
+	output := kubepug.GetDeprecations(inputMode)
+	return &output
 }

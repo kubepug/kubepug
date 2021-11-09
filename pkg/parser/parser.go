@@ -7,15 +7,14 @@ import (
 	"os"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 var definitionsMap map[string]interface{}
 
 // PopulateKubeAPIMap Converts an API Definition into a map of KubeAPIs["group/version/kind"]
-func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(swaggerfile string) (err error) {
+func (kubeAPIs KubernetesAPIs) PopulateKubeAPIMap(swaggerfile string) (err error) {
 	// Open our jsonFile
 	log.Debugf("Opening the swagger file for reading: %s", swaggerfile)
 	jsonFile, err := os.Open(swaggerfile)
@@ -24,34 +23,43 @@ func (KubeAPIs KubernetesAPIs) PopulateKubeAPIMap(swaggerfile string) (err error
 		return err
 	}
 	// read our opened jsonFile as a byte array.
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		return err
+	}
 
 	err = jsonFile.Close()
 	if err != nil {
 		return err
 	}
+
 	err = json.Unmarshal(byteValue, &definitionsMap)
 	if err != nil {
 		return fmt.Errorf("error parsing the JSON, file might be invalid: %v", err)
 	}
-	definitions := definitionsMap["definitions"].(map[string]interface{})
+
+	definitions := definitionsMap["definitions"].(map[string]interface{}) // nolint: errcheck
 
 	log.Debugf("Iteracting through %d definitions", len(definitions))
 	for k, value := range definitions {
-		val := value.(map[string]interface{})
+		val := value.(map[string]interface{}) // nolint: errcheck
 		log.Debugf("Getting API values from %s", k)
+
 		if kubeapivalue, valid := getKubeAPIValues(val); valid {
 			log.Debugf("Valid API object found for %s", k)
+
 			var name string
 			if kubeapivalue.Group != "" {
 				name = fmt.Sprintf("%s/%s/%s", kubeapivalue.Group, kubeapivalue.Version, kubeapivalue.Kind)
 			} else {
 				name = fmt.Sprintf("%s/%s", kubeapivalue.Version, kubeapivalue.Kind)
 			}
+
 			log.Debugf("Adding %s to map. Deprecated: %t", name, kubeapivalue.Deprecated)
-			KubeAPIs[name] = kubeapivalue
+			kubeAPIs[name] = kubeapivalue
 		}
 	}
+
 	return nil
 }
 
@@ -59,19 +67,22 @@ func getGroupVersionKind(value map[string]interface{}) (group, version, kind str
 	for k, v := range value {
 		switch k {
 		case "group":
-			group = v.(string)
+			group = v.(string) //nolint: errcheck
 		case "version":
-			version = v.(string)
+			version = v.(string) //nolint: errcheck
 		case "kind":
-			kind = v.(string)
+			kind = v.(string) //nolint: errcheck
 		}
 	}
+
 	return group, version, kind
 }
 
 func getKubeAPIValues(value map[string]interface{}) (KubeAPI, bool) {
-	var valid, deprecated bool
-	var description, group, version, kind string
+	var (
+		valid, deprecated                 bool
+		description, group, version, kind string
+	)
 
 	gvk, valid, err := unstructured.NestedSlice(value, "x-kubernetes-group-version-kind")
 

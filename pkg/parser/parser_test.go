@@ -9,7 +9,6 @@ import (
 )
 
 func TestPopulateKubeAPIs(t *testing.T) {
-
 	mockcontentvalid := `
 	{
 		"definitions": {
@@ -39,7 +38,7 @@ func TestPopulateKubeAPIs(t *testing.T) {
 					  {
 						"group": "",
 						"kind": "Pod",
-						"version": "v1"					  
+						"version": "v1"
 					}
 				  ]
 			}
@@ -81,7 +80,7 @@ func TestPopulateKubeAPIs(t *testing.T) {
 					  {
 						"group": "",
 						"kind": "Pod",
-						"version": "v1"					  
+						"version": "v1"
 					}
 				  ]
 			}
@@ -156,6 +155,7 @@ func TestPopulateKubeAPIs(t *testing.T) {
 			if err != nil {
 				t.Errorf("unexpected error creating temporary file: %v", err)
 			}
+
 			o := KubernetesAPIs{}
 			err = o.PopulateKubeAPIMap(tc.swaggerfile)
 			if err != nil && err.Error() != tc.expectederr {
@@ -164,8 +164,16 @@ func TestPopulateKubeAPIs(t *testing.T) {
 
 			eq := reflect.DeepEqual(o, tc.KubeAPIs)
 			if !eq {
-				prettyExpected, _ := json.MarshalIndent(tc.KubeAPIs, "", "")
-				prettyGot, _ := json.MarshalIndent(o, "", "")
+				prettyExpected, err := json.MarshalIndent(tc.KubeAPIs, "", "")
+				if err != nil {
+					t.Errorf("unexpected error creating temporary file: %v", err)
+				}
+
+				prettyGot, err := json.MarshalIndent(o, "", "")
+				if err != nil {
+					t.Errorf("unexpected error creating temporary file: %v", err)
+				}
+
 				t.Errorf("Maps are not equivalent, got %s, expected %s", prettyGot, prettyExpected)
 			}
 		})
@@ -178,10 +186,11 @@ func writeFile(filecontent []byte, file string) error {
 		return fmt.Errorf("error while creating mock file %s", file)
 	}
 	defer f.Close()
+
 	_, err = f.Write(filecontent)
 	if err != nil {
 		return fmt.Errorf("error while writing to file %s", file)
 	}
-	return nil
 
+	return nil
 }

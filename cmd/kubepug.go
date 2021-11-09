@@ -3,29 +3,25 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/rikatz/kubepug/lib"
-	"github.com/rikatz/kubepug/pkg/formatter"
 	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
+	"github.com/rikatz/kubepug/lib"
+	"github.com/rikatz/kubepug/pkg/formatter"
 )
 
 var (
 	kubernetesConfigFlags *genericclioptions.ConfigFlags
-)
 
-// The version var will be used to generate the --version command and is passed by goreleaser
-var version string
+	// The version var will be used to generate the --version command and is passed by goreleaser
+	version string
 
-var (
 	k8sVersion        string
 	forceDownload     bool
 	apiWalk           bool
@@ -73,15 +69,15 @@ func runPug(cmd *cobra.Command, args []string) error {
 	}
 	logrus.SetLevel(lvl)
 
-	log.SetFormatter(&log.TextFormatter{
+	logrus.SetFormatter(&logrus.TextFormatter{
 		DisableColors: true,
 		FullTimestamp: true,
 	})
-	if lvl == log.DebugLevel {
-		log.SetReportCaller(true)
+	if lvl == logrus.DebugLevel {
+		logrus.SetReportCaller(true)
 	}
 
-	log.Debugf("Starting Kubepug with configs: %+v", config)
+	logrus.Debugf("Starting Kubepug with configs: %+v", config)
 	kubepug := lib.NewKubepug(config)
 
 	result, err := kubepug.GetDeprecated()
@@ -89,15 +85,15 @@ func runPug(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	log.Debug("Starting deprecated objects printing")
-	formatter := formatter.NewFormatter(format)
-	bytes, err := formatter.Output(*result)
+	logrus.Debug("Starting deprecated objects printing")
+	format := formatter.NewFormatter(format)
+	bytes, err := format.Output(*result)
 	if err != nil {
 		return err
 	}
 
 	if filename != "" {
-		err = ioutil.WriteFile(filename, bytes, 0644)
+		err = ioutil.WriteFile(filename, bytes, 0o644) // nolint: gosec
 		if err != nil {
 			return err
 		}
@@ -108,6 +104,7 @@ func runPug(cmd *cobra.Command, args []string) error {
 	if (errorOnDeleted && len(result.DeletedAPIs) > 0) || (errorOnDeprecated && len(result.DeprecatedAPIs) > 0) {
 		return fmt.Errorf("found %d Deleted APIs and %d Deprecated APIs", len(result.DeletedAPIs), len(result.DeprecatedAPIs))
 	}
+
 	return nil
 }
 
@@ -121,18 +118,18 @@ func init() {
 	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(rootCmd.Flags())
 
-	rootCmd.Flags().MarkHidden("as")                       // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("as-group")                 // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("cache-dir")                // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("certificate-authority")    // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("client-certificate")       // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("client-key")               // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("insecure-skip-tls-verify") // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("namespace")                // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("request-timeout")          // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("server")                   // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("token")                    // Ignoring error in deepsource. skipcq: GSC-G104
-	rootCmd.Flags().MarkHidden("user")                     // Ignoring error in deepsource. skipcq: GSC-G104
+	rootCmd.Flags().MarkHidden("as")                       // nolint: errcheck
+	rootCmd.Flags().MarkHidden("as-group")                 // nolint: errcheck
+	rootCmd.Flags().MarkHidden("cache-dir")                // nolint: errcheck
+	rootCmd.Flags().MarkHidden("certificate-authority")    // nolint: errcheck
+	rootCmd.Flags().MarkHidden("client-certificate")       // nolint: errcheck
+	rootCmd.Flags().MarkHidden("client-key")               // nolint: errcheck
+	rootCmd.Flags().MarkHidden("insecure-skip-tls-verify") // nolint: errcheck
+	rootCmd.Flags().MarkHidden("namespace")                // nolint: errcheck
+	rootCmd.Flags().MarkHidden("request-timeout")          // nolint: errcheck
+	rootCmd.Flags().MarkHidden("server")                   // nolint: errcheck
+	rootCmd.Flags().MarkHidden("token")                    // nolint: errcheck
+	rootCmd.Flags().MarkHidden("user")                     // nolint: errcheck
 
 	rootCmd.PersistentFlags().BoolVar(&apiWalk, "api-walk", true, "Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be I/O intensive to APIServer. Defaults to true")
 	rootCmd.PersistentFlags().BoolVar(&errorOnDeprecated, "error-on-deprecated", false, "If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false")
@@ -149,7 +146,7 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Errorf("An error has ocurred: %v", err)
+		logrus.Errorf("An error has occurred: %v", err)
 		os.Exit(1)
 	}
 }

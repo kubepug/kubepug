@@ -11,9 +11,10 @@ type Deprecator interface {
 	ListDeleted() []results.DeletedAPI
 }
 
-// GetDeprecations returns the results of the comparision between the Input and the APIs
+// GetDeprecations returns the results of the comparison between the Input and the APIs
 func GetDeprecations(d Deprecator) (result results.Result) {
 	result.DeprecatedAPIs = d.ListDeprecated()
 	result.DeletedAPIs = d.ListDeleted()
+
 	return result
 }

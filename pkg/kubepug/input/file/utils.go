@@ -8,9 +8,8 @@ import (
 	"os"
 	"strings"
 
-	yaml "gopkg.in/yaml.v3"
-
 	log "github.com/sirupsen/logrus"
+	yaml "gopkg.in/yaml.v3"
 
 	"github.com/rikatz/kubepug/pkg/results"
 )
@@ -54,12 +53,12 @@ func GetFileItems(location string) (fileItems FileItems) {
 	for _, file := range filesInfo {
 		fileItems.yamlToMap(file, location, fileLocation.IsDir())
 	}
+
 	return fileItems
 }
 
 // Yaml to Map takes a YAML and insert its items into the FileItems Map
 func (fileItems FileItems) yamlToMap(file os.FileInfo, location string, isDir bool) {
-
 	if isDir {
 		location = fmt.Sprintf("%s/%s", location, file.Name())
 	}
@@ -94,10 +93,12 @@ func (fileItems FileItems) yamlToMap(file os.FileInfo, location string, isDir bo
 			version = gv[0]
 			objIndex = fmt.Sprintf("%s/%s", version, obj.Kind)
 		}
+
 		if version == "" || obj.Kind == "" {
 			log.Warningf("YAML file does not contain apiVersion or Kind: %s  Skipping to next", location)
 			break
 		}
+
 		item := results.Item{
 			ObjectName: obj.Metadata.Name,
 			Namespace:  obj.Metadata.Namespace,
