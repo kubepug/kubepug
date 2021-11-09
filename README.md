@@ -45,7 +45,7 @@ Flags:
 ```
 
 ### Checking a Kubernetes Cluster
-You can check the status of a running cluster with the following command. 
+You can check the status of a running cluster with the following command.
 
 ```
 $ kubepug --k8s-version=v1.18.6 # Will verify the current context against v1.18.6 swagger.json
@@ -88,7 +88,7 @@ $ kubepug --input-file=./deployment/ --error-on-deleted --error-on-deprecated
 
 With the command above
 * The swagger.json from master branch will be used
-* All YAML files (excluding subdirectories) will be verified 
+* All YAML files (excluding subdirectories) will be verified
 * The program will exit with an error if deprecated or deleted objects are found.
 
 
@@ -111,7 +111,8 @@ Steps to follow:
 This will verify the current context against the swagger file we downloaded and copied over manually
 
 ### Example of Usage in CI with Github Actions
-```
+
+```yaml
 name: Sample CI Workflow
 # This workflow is triggered on pushes to the repository.
 on: [push]
@@ -126,15 +127,16 @@ jobs:
       - name: Check-out repo
         uses: actions/checkout@v2
 
-      - name: Install Helm and Kubepug binaries
-        run: |
-          mkdir -p ~/bin
-          curl -sSL https://github.com/rikatz/kubepug/releases/latest/download/kubepug_linux_amd64.tar.gz | tar xvfz - --overwrite -C ~/bin/
-          curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar xvfz - -C ~/bin/ --wildcards --strip 1 '*/helm'
-      
+      - uses: azure/setup-helm@v1
+        with:
+          version: $HELM_VERSION
+        id: install
+
+      - uses: cpanato/kubepug-installer@v1.0.0
+
       - name: Run Kubepug with your Helm Charts Repository
         run: |
-          find charts -mindepth 1 -maxdepth 1 -type d | xargs -t -n1 -I% /bin/bash -c '~/bin/helm template % --api-versions ${K8S_TARGET_VERSION} | ~/bin/kubepug --error-on-deprecated --error-on-deleted --k8s-version ${K8S_TARGET_VERSION} --input-file /dev/stdin'
+          find charts -mindepth 1 -maxdepth 1 -type d | xargs -t -n1 -I% /bin/bash -c 'helm template % --api-versions ${K8S_TARGET_VERSION} | kubepug --error-on-deprecated --error-on-deleted --k8s-version ${K8S_TARGET_VERSION} --input-file /dev/stdin'
 ```
 ## Screenshot
 

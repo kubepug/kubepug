@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
@@ -18,9 +17,6 @@ import (
 
 var (
 	kubernetesConfigFlags *genericclioptions.ConfigFlags
-
-	// The version var will be used to generate the --version command and is passed by goreleaser
-	version string
 
 	k8sVersion        string
 	forceDownload     bool
@@ -41,16 +37,8 @@ var (
 		Example:      filepath.Base(os.Args[0]),
 		Args:         cobra.MinimumNArgs(0),
 		RunE:         runPug,
-		Version:      getVersion(),
 	}
 )
-
-func getVersion() string {
-	if version == "" {
-		return "master branch"
-	}
-	return version
-}
 
 func runPug(cmd *cobra.Command, args []string) error {
 	config := lib.Config{
@@ -142,9 +130,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
 	rootCmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analysed")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
+
+	rootCmd.AddCommand(Version())
 }
 
-func main() {
+func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		logrus.Errorf("An error has occurred: %v", err)
 		os.Exit(1)
