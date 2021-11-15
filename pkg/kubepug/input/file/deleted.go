@@ -19,7 +19,7 @@ func GetDeleted(fileItems FileItems, kubeAPIs parser.KubernetesAPIs) (deleted []
 			group = gvk[0]
 			version = gvk[1]
 			kind = gvk[2]
-			if strings.Contains(group, ".") && !strings.Contains("group", "k8s.io") {
+			if strings.Contains(group, ".") && !strings.Contains(group, "k8s.io") {
 				continue
 			}
 		} else {
