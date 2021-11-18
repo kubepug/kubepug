@@ -8,9 +8,9 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	k8s.io/apimachinery v0.22.3
-	k8s.io/cli-runtime v0.22.3
-	k8s.io/client-go v0.22.3
+	k8s.io/apimachinery v0.22.4
+	k8s.io/cli-runtime v0.22.4
+	k8s.io/client-go v0.22.4
 )
 
 require (
@@ -62,9 +62,9 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.22.3 // indirect
+	k8s.io/api v0.22.4 // indirect
 	k8s.io/klog/v2 v2.20.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e // indirect
+	k8s.io/kube-openapi v0.0.0-20211109043538-20434351676c // indirect
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
 	sigs.k8s.io/kustomize/api v0.8.11 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.11.0 // indirect
