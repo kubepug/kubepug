@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -46,7 +45,7 @@ func downloadFile(filename, url string) error {
 // download the file and returns the location to be used
 func DownloadSwaggerFile(version, swaggerdir string, force bool) (filename string, err error) {
 	if swaggerdir == "" {
-		swaggerdir, err = ioutil.TempDir("", "kubepug")
+		swaggerdir, err = os.MkdirTemp("", "kubepug")
 		if err != nil {
 			return "", err
 		}

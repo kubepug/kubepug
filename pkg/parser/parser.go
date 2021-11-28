@@ -3,7 +3,7 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 
@@ -23,7 +23,7 @@ func (kubeAPIs KubernetesAPIs) PopulateKubeAPIMap(swaggerfile string) (err error
 		return err
 	}
 	// read our opened jsonFile as a byte array.
-	byteValue, err := ioutil.ReadAll(jsonFile)
+	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {
 		return err
 	}
