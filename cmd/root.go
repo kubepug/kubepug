@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -81,7 +80,7 @@ func runPug(cmd *cobra.Command, args []string) error {
 	}
 
 	if filename != "" {
-		err = ioutil.WriteFile(filename, bytes, 0o644) // nolint: gosec
+		err = os.WriteFile(filename, bytes, 0o644) // nolint: gosec
 		if err != nil {
 			return err
 		}
