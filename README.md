@@ -15,6 +15,14 @@ KubePug/Deprecations is intended to be a kubectl plugin, which:
 
 Just run ``kubectl krew install deprecations``
 
+## How to use it with Helm
+
+If you want to verify the generated manifests by Helm, you can run the program as following:
+```
+helm template -f values.yaml .0 | kubepug --k8s-version v1.22.0 --input-file=-
+```
+
+Change the arguments in kubepug program (and Helm template!) as desired!
 ## How to Use it as a standalone program
 
 Download the correct version from Releases page.
