@@ -22,18 +22,18 @@ func GetDeprecated(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 
 	configRest, err := config.ToRESTConfig()
 	if err != nil {
-		log.Fatalf("Failed to create the K8s config parameters while listing Deprecated objects")
+		log.Fatalf("Failed to create the K8s config parameters while listing Deprecated objects: %s", err)
 	}
 
 	client, err := dynamic.NewForConfig(configRest)
 	if err != nil {
-		log.Fatalf("Failed to create the K8s client while listing Deprecated objects")
+		log.Fatalf("Failed to create the K8s client while listing Deprecated objects: %s", err)
 	}
 
 	// Feed the KubeAPIs with the resourceName as this is used to the K8s Resource lister
 	disco, err := discovery.NewDiscoveryClientForConfig(configRest)
 	if err != nil {
-		log.Fatalf("Failed to create the K8s Discovery client")
+		log.Fatalf("Failed to create the K8s Discovery client: %s", err)
 	}
 
 	ResourceAndGV := DiscoverResourceNameAndPreferredGV(disco)
@@ -67,7 +67,7 @@ func GetDeprecated(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Con
 
 		gv, err := schema.ParseGroupVersion(prefResource.GroupVersion)
 		if err != nil {
-			log.Warnf("Failed to parse GroupVersion %s of resource %s existing in the API Server", prefResource.GroupVersion, prefResource.ResourceName)
+			log.Warnf("Failed to parse GroupVersion %s of resource %s existing in the API Server: %s", prefResource.GroupVersion, prefResource.ResourceName, err)
 		}
 
 		gvrPreferred := gv.WithResource(prefResource.ResourceName)
