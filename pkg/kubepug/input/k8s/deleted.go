@@ -41,7 +41,7 @@ func (ignoreStruct ignoreStruct) populateCRDGroups(dynClient dynamic.Interface, 
 		return
 	}
 	if err != nil {
-		log.Fatalf("Failed to connect to K8s cluster to List CRDs")
+		log.Fatalf("Failed to connect to K8s cluster to List CRDs: %s", err)
 	}
 
 	// We'll create an empty map[crd] because that's easier than keep interating into an array/slice to find a value
@@ -75,7 +75,7 @@ func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface,
 		return
 	}
 	if err != nil {
-		log.Fatalf("Failed to connect to K8s cluster to List API Services")
+		log.Fatalf("Failed to connect to K8s cluster to List API Services: %s", err)
 	}
 
 	// We'll create an empty map[crd] because that's easier than keep interating into an array/slice to find a value
@@ -99,12 +99,12 @@ func (ignoreStruct ignoreStruct) populateAPIService(dynClient dynamic.Interface,
 func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.ConfigFlags) (deleted []results.DeletedAPI) {
 	configRest, err := config.ToRESTConfig()
 	if err != nil {
-		log.Fatalf("Failed to create the K8s config parameters while listing Deleted objects")
+		log.Fatalf("Failed to create the K8s config parameters while listing Deleted objects: %s", err)
 	}
 
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(configRest)
 	if err != nil {
-		log.Fatalf("Failed to create the K8s Discovery client")
+		log.Fatalf("Failed to create the K8s Discovery client: %s", err)
 	}
 
 	log.Debug("Getting all the Server Resources")
@@ -154,7 +154,7 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 			if _, ok := kubeAPIs[keyAPI]; !ok {
 				gv, err := schema.ParseGroupVersion(resourceGroupVersion.GroupVersion)
 				if err != nil {
-					log.Fatalf("Failed to Parse GroupVersion of Resource")
+					log.Fatalf("Failed to Parse GroupVersion of Resource: %s", err)
 				}
 				gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: resource.Name}
 				list, err := dynClient.Resource(gvr).List(context.TODO(), metav1.ListOptions{})
