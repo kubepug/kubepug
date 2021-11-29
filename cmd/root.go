@@ -12,6 +12,9 @@ import (
 
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
+
+	// Import the Kubernetes Authentication plugin
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 var (
