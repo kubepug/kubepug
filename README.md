@@ -25,7 +25,7 @@ helm template -f values.yaml .0 | kubepug --k8s-version v1.22.0 --input-file=-
 Change the arguments in kubepug program (and Helm template!) as desired!
 ## How to Use it as a standalone program
 
-Download the correct version from Releases page.
+Download the correct version from [Releases](https://github.com/rikatz/kubepug/releases/latest) page.
 
 After that, the command can be used just as kubectl, but with the following flags:
 
