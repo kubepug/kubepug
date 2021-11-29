@@ -23,6 +23,7 @@ type FileStruct struct {
 		Name      string `yaml:"name"`
 		Namespace string `yaml:"namespace"`
 	} `yaml:"metadata"`
+	Items []FileStruct `yaml:"items,omitempty"`
 }
 
 // FileItems is a map which key is the Group/Version/Kind from K8s and value are the items found in
@@ -96,7 +97,13 @@ func (fileItems FileItems) yamlToMap(file os.FileInfo, location string, isDir bo
 			log.Warningf("Found invalid yaml: %v. Skipping to next", err)
 			continue
 		}
-		fileItems.addObject(&obj, location)
+		if len(obj.Items) > 0 {
+			for item := range obj.Items {
+				fileItems.addObject(&obj.Items[item], location)
+			}
+		} else {
+			fileItems.addObject(&obj, location)
+		}
 	}
 }
 
