@@ -25,7 +25,13 @@ spec:
         os: darwin
         arch: amd64
     {{addURIAndSha "https://github.com/rikatz/kubepug/releases/download/{{ .TagName }}/kubepug_darwin_amd64.tar.gz" .TagName }}
-    bin: "kubepug" 
+    bin: "kubepug"
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/rikatz/kubepug/releases/download/{{ .TagName }}/kubepug_darwin_arm64.tar.gz" .TagName }}
+    bin: "kubepug"
   - selector:
       matchLabels:
         os: linux
