@@ -13,23 +13,25 @@ KubePug/Deprecations is intended to be a kubectl plugin, which:
 
 ## How to use it as a krew plugin
 
-Just run ``kubectl krew install deprecations``
+Just run `kubectl krew install deprecations`
 
 ## How to use it with Helm
 
 If you want to verify the generated manifests by Helm, you can run the program as following:
-```
+
+```console
 helm template -f values.yaml .0 | kubepug --k8s-version v1.22.0 --input-file=-
 ```
 
 Change the arguments in kubepug program (and Helm template!) as desired!
+
 ## How to Use it as a standalone program
 
 Download the correct version from [Releases](https://github.com/rikatz/kubepug/releases/latest) page.
 
 After that, the command can be used just as kubectl, but with the following flags:
 
-```
+```console
 $ kubepug --help
 [...]
 Flags:
@@ -53,9 +55,10 @@ Flags:
 ```
 
 ### Checking a Kubernetes Cluster
+
 You can check the status of a running cluster with the following command.
 
-```
+```console
 $ kubepug --k8s-version=v1.18.6 # Will verify the current context against v1.18.6 swagger.json
 [...]
 RESULTS:
@@ -90,7 +93,7 @@ ReplicaSet found in extensions/v1beta1
 
 You can verify files with the following:
 
-```
+```console
 $ kubepug --input-file=./deployment/ --error-on-deleted --error-on-deprecated
 ```
 
@@ -108,13 +111,17 @@ Steps to follow:
 
 1. Download swagger file in a machine that has internet connection
 
-`$ curl -o swagger-v1.17.0.json https://raw.githubusercontent.com/kubernetes/kubernetes/v1.17.0/api/openapi-spec/swagger.json`
+```console
+$ curl -o swagger-v1.17.0.json https://raw.githubusercontent.com/kubernetes/kubernetes/v1.17.0/api/openapi-spec/swagger.json
+```
 
 2. Securely move the json file to your Air-Gapped environment, to the folder of your choosing. This folder will be used by `kubepug`.
 
 3. Execute `kubepug` with the option `swagger-dir`, like this
 
-`$ kubepug --k8s-version=v1.17.0 --swagger-dir=/your/swagger/folder`
+```console
+$ kubepug --k8s-version=v1.17.0 --swagger-dir=/your/swagger/folder
+```
 
 This will verify the current context against the swagger file we downloaded and copied over manually
 
@@ -125,8 +132,8 @@ name: Sample CI Workflow
 # This workflow is triggered on pushes to the repository.
 on: [push]
 env:
-  HELM_VERSION: "v3.2.4"
-  K8S_TARGET_VERSION: "v1.16.0"
+  HELM_VERSION: "v3.9.0"
+  K8S_TARGET_VERSION: "v1.22.0"
 
 jobs:
  api-deprecations-test:
@@ -146,6 +153,7 @@ jobs:
         run: |
           find charts -mindepth 1 -maxdepth 1 -type d | xargs -t -n1 -I% /bin/bash -c 'helm template % --api-versions ${K8S_TARGET_VERSION} | kubepug --error-on-deprecated --error-on-deleted --k8s-version ${K8S_TARGET_VERSION} --input-file /dev/stdin'
 ```
+
 ## Screenshot
 
 ![Kubepug](assets/screenshot.png)
