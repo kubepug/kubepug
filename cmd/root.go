@@ -15,6 +15,7 @@ import (
 
 	// Import the Kubernetes Authentication plugin
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"sigs.k8s.io/release-utils/version"
 )
 
 var (
@@ -35,7 +36,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:          filepath.Base(os.Args[0]),
 		SilenceUsage: true,
-		Short:        "Shows all the deprecated objects in a Kubernetes cluster allowing the operator to verify them before upgrading the cluster. It uses the swagger.json version available in master branch of Kubernetes repository (github.com/kubernetes/kubernetes) as a reference.",
+		Short:        "Shows all the deprecated objects in a Kubernetes cluster allowing the operator to verify them before upgrading the cluster.\nIt uses the swagger.json version available in master branch of Kubernetes repository (github.com/kubernetes/kubernetes) as a reference.",
 		Example:      filepath.Base(os.Args[0]),
 		Args:         cobra.MinimumNArgs(0),
 		RunE:         runPug,
@@ -133,7 +134,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analysed. Use \"-\" to read from STDIN")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
 
-	rootCmd.AddCommand(Version())
+	rootCmd.AddCommand(version.WithFont("starwars"))
 }
 
 func Execute() {
