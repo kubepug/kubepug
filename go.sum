@@ -423,7 +423,6 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
-github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
 github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415/go.mod h1:GwrjFmJcFw6At/Gs6z4yjiIwzuJ1/+UwLxMQDVQXShQ=
@@ -983,8 +982,8 @@ sigs.k8s.io/kustomize/api v0.11.5/go.mod h1:2UDpxS6AonWXow2ZbySd4AjUxmdXLeTlvGBC
 sigs.k8s.io/kustomize/kyaml v0.13.6/go.mod h1:yHP031rn1QX1lr/Xd934Ri/xdVNG8BE2ECa78Ht/kEg=
 sigs.k8s.io/kustomize/kyaml v0.13.7 h1:/EZ/nPaLUzeJKF/BuJ4QCuMVJWiEVoI8iftOHY3g3tk=
 sigs.k8s.io/kustomize/kyaml v0.13.7/go.mod h1:6K+IUOuir3Y7nucPRAjw9yth04KSWBnP5pqUTGwj/qU=
-sigs.k8s.io/release-utils v0.7.1 h1:dQuGqQi7XGW4PSLJ6JRlN2JUDkeXSepDL1nTdl9QTPY=
-sigs.k8s.io/release-utils v0.7.1/go.mod h1:SK+/kkc2i7ZO0CFXDCvXpzIZyt13cPlscaApaZD7VmU=
+sigs.k8s.io/release-utils v0.7.2 h1:eFv2dvohvD6Hl1GRxRZ0UkG9YxPNhbaHcGKp5jb2Jns=
+sigs.k8s.io/release-utils v0.7.2/go.mod h1:vus7H8iG14tllKDciKxAXgfLO50P32H7gtriCqpmHUE=
 sigs.k8s.io/structured-merge-diff/v4 v4.0.2/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK1F7G282QMXDPYydCw=
 sigs.k8s.io/structured-merge-diff/v4 v4.2.1 h1:bKCqE9GvQ5tiVHn5rfn1r+yao3aLQEaLzkkmAkf+A6Y=
 sigs.k8s.io/structured-merge-diff/v4 v4.2.1/go.mod h1:j/nl6xW8vLS49O8YvXW1ocPhZawJtm+Yrr7PPRQ0Vg4=
