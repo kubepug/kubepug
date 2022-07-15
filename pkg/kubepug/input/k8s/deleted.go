@@ -3,6 +3,7 @@ package k8sinput
 import (
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -22,8 +23,9 @@ import (
 type ignoreStruct map[string]struct{}
 
 const (
-	crdGroup        = "apiextensions.k8s.io"
-	apiRegistration = "apiregistration.k8s.io"
+	crdGroup          = "apiextensions.k8s.io"
+	apiRegistration   = "apiregistration.k8s.io"
+	v1beta1IngressApi = "extensions/v1beta1/Ingress"
 )
 
 // This function will receive an apiExtension (CRD) and populate it into the struct to be verified later
@@ -138,36 +140,24 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 
 	log.Debugf("Walking through %d resource types", len(resourcesList))
 	for _, resourceGroupVersion := range resourcesList {
-		// We dont want CRDs or APIExtensions to be walked
+		// We don't want CRDs or APIExtensions to be walked
 		if _, ok := ignoreObjects[strings.Split(resourceGroupVersion.GroupVersion, "/")[0]]; ok {
 			continue
 		}
 
 		for i := range resourceGroupVersion.APIResources {
-			resource := &resourceGroupVersion.APIResources[i]
-			// We don't want to check subObjects (like pods/status)
+			resource := &resourceGroupVersion.APIResources[i] // We don't want to check subObjects (like pods/status)
 			if len(strings.Split(resource.Name, "/")) != 1 {
 				continue
 			}
 
 			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Kind)
 			if _, ok := kubeAPIs[keyAPI]; !ok {
-				gv, err := schema.ParseGroupVersion(resourceGroupVersion.GroupVersion)
-				if err != nil {
-					log.Fatalf("Failed to Parse GroupVersion of Resource: %s", err)
-				}
-				gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: resource.Name}
-				list, err := dynClient.Resource(gvr).List(context.TODO(), metav1.ListOptions{})
-				if apierrors.IsNotFound(err) || apierrors.IsMethodNotSupported(err) {
-					continue
-				}
 
-				if apierrors.IsForbidden(err) {
-					log.Fatalf("Failed to list Server Resources of type %s/%s/%s. Permission denied! Please check if you have the proper authorization", gv.Group, gv.Version, resource.Kind)
-				}
+				gvr, list := getResources(dynClient, resourceGroupVersion.GroupVersion, resource.Name, resource.Kind)
 
-				if err != nil {
-					log.Fatalf("Failed to List objects of type %s/%s/%s. \nError: %v", gv.Group, gv.Version, resource.Kind, err)
+				if keyAPI == v1beta1IngressApi {
+					list.Items = fixDeletedIngressList(dynClient, list.Items)
 				}
 
 				if len(list.Items) > 0 {
@@ -177,7 +167,7 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 						Name:    resource.Name,
 						Group:   gvr.Group,
 						Kind:    resource.Kind,
-						Version: gv.Version,
+						Version: gvr.Version,
 					}
 
 					d.Items = results.ListObjects(list.Items)
@@ -188,4 +178,52 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 	}
 
 	return deleted
+}
+
+func getResources(dynClient dynamic.Interface, groupVersion string, resourceName string, resourceKind string) (schema.GroupVersionResource, *unstructured.UnstructuredList) {
+
+	gv, err := schema.ParseGroupVersion(groupVersion)
+	if err != nil {
+		log.Fatalf("Failed to Parse GroupVersion of Resource: %s", err)
+	}
+
+	gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: resourceName}
+	list, err := dynClient.Resource(gvr).List(context.TODO(), metav1.ListOptions{})
+	if apierrors.IsNotFound(err) || apierrors.IsMethodNotSupported(err) {
+		return gvr, list
+	}
+
+	if apierrors.IsForbidden(err) {
+		log.Fatalf("Failed to list Server Resources of type %s/%s/%s. Permission denied! Please check if you have the proper authorization", gv.Group, gv.Version, resourceKind)
+	}
+
+	if err != nil {
+		log.Fatalf("Failed to List objects of type %s/%s/%s. \nError: %v", gv.Group, gv.Version, resourceKind, err)
+	}
+
+	return gvr, list
+}
+
+// Removes the false positives deleted ingresses:
+// The client library is returning the same results for "extensions/v1beta1/Ingress" and for "networking.k8s.io/v1/Ingress".
+func fixDeletedIngressList(dynClient dynamic.Interface, v1beta1Ingresses []unstructured.Unstructured) []unstructured.Unstructured {
+
+	_, stableIngresses := getResources(dynClient, "networking.k8s.io/v1", "ingresses", "Ingress")
+	stableIngressesMap := make(map[string]bool)
+
+	for _, item := range stableIngresses.Items {
+		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
+		stableIngressesMap[uid] = true
+	}
+
+	deletedItems := []unstructured.Unstructured{}
+	for _, item := range v1beta1Ingresses {
+		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
+		// Only adds to the deleted list if not found in the stable ingresses list
+		if !stableIngressesMap[uid] {
+			deletedItems = append(deletedItems, item)
+		}
+	}
+
+	return deletedItems
 }
