@@ -22,11 +22,21 @@ import (
 // ignoreStruct is an empty map, the key is the API Group to be ignored. No value exists
 type ignoreStruct map[string]struct{}
 
+type groupResourceKind struct {
+	GroupVersion string
+	ResourceName string
+	ResourceKind string
+}
+
 const (
-	crdGroup          = "apiextensions.k8s.io"
-	apiRegistration   = "apiregistration.k8s.io"
-	v1beta1IngressApi = "extensions/v1beta1/Ingress"
+	crdGroup        = "apiextensions.k8s.io"
+	apiRegistration = "apiregistration.k8s.io"
 )
+
+// Maps the deleted APIs to its replacements
+var deletedApiReplacements = map[string]groupResourceKind{
+	"extensions/v1beta1/Ingress": {"networking.k8s.io/v1", "ingresses", "Ingress"},
+}
 
 // This function will receive an apiExtension (CRD) and populate it into the struct to be verified later
 func (ignoreStruct ignoreStruct) populateCRDGroups(dynClient dynamic.Interface, version string) {
@@ -154,10 +164,10 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Kind)
 			if _, ok := kubeAPIs[keyAPI]; !ok {
 
-				gvr, list := getResources(dynClient, resourceGroupVersion.GroupVersion, resource.Name, resource.Kind)
+				gvr, list := getResources(dynClient, groupResourceKind{resourceGroupVersion.GroupVersion, resource.Name, resource.Kind})
 
-				if keyAPI == v1beta1IngressApi {
-					list.Items = fixDeletedIngressList(dynClient, list.Items)
+				if newApi, ok := deletedApiReplacements[keyAPI]; ok {
+					list.Items = fixDeletedItemsList(dynClient, list.Items, newApi)
 				}
 
 				if len(list.Items) > 0 {
@@ -180,35 +190,35 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 	return deleted
 }
 
-func getResources(dynClient dynamic.Interface, groupVersion string, resourceName string, resourceKind string) (schema.GroupVersionResource, *unstructured.UnstructuredList) {
+func getResources(dynClient dynamic.Interface, grk groupResourceKind) (schema.GroupVersionResource, *unstructured.UnstructuredList) {
 
-	gv, err := schema.ParseGroupVersion(groupVersion)
+	gv, err := schema.ParseGroupVersion(grk.GroupVersion)
 	if err != nil {
 		log.Fatalf("Failed to Parse GroupVersion of Resource: %s", err)
 	}
 
-	gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: resourceName}
+	gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: grk.ResourceName}
 	list, err := dynClient.Resource(gvr).List(context.TODO(), metav1.ListOptions{})
 	if apierrors.IsNotFound(err) || apierrors.IsMethodNotSupported(err) {
 		return gvr, list
 	}
 
 	if apierrors.IsForbidden(err) {
-		log.Fatalf("Failed to list Server Resources of type %s/%s/%s. Permission denied! Please check if you have the proper authorization", gv.Group, gv.Version, resourceKind)
+		log.Fatalf("Failed to list Server Resources of type %s/%s/%s. Permission denied! Please check if you have the proper authorization", gv.Group, gv.Version, grk.ResourceKind)
 	}
 
 	if err != nil {
-		log.Fatalf("Failed to List objects of type %s/%s/%s. \nError: %v", gv.Group, gv.Version, resourceKind, err)
+		log.Fatalf("Failed to List objects of type %s/%s/%s. \nError: %v", gv.Group, gv.Version, grk.ResourceKind, err)
 	}
 
 	return gvr, list
 }
 
-// Removes the false positives deleted ingresses:
-// The client library is returning the same results for "extensions/v1beta1/Ingress" and for "networking.k8s.io/v1/Ingress".
-func fixDeletedIngressList(dynClient dynamic.Interface, v1beta1Ingresses []unstructured.Unstructured) []unstructured.Unstructured {
+// Removes the false positives deleted items
+// e.g.: The client library is returning the same results for "extensions/v1beta1/Ingress" and for "networking.k8s.io/v1/Ingress".
+func fixDeletedItemsList(dynClient dynamic.Interface, v1beta1Ingresses []unstructured.Unstructured, grk groupResourceKind) []unstructured.Unstructured {
 
-	_, stableIngresses := getResources(dynClient, "networking.k8s.io/v1", "ingresses", "Ingress")
+	_, stableIngresses := getResources(dynClient, grk)
 	stableIngressesMap := make(map[string]bool)
 
 	for _, item := range stableIngresses.Items {
