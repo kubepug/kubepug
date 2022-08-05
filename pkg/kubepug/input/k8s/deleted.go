@@ -215,22 +215,22 @@ func getResources(dynClient dynamic.Interface, grk groupResourceKind) (schema.Gr
 }
 
 // Removes the false positives deleted items
-// e.g.: The client library is returning the same results for "extensions/v1beta1/Ingress" and for "networking.k8s.io/v1/Ingress".
-func fixDeletedItemsList(dynClient dynamic.Interface, v1beta1Ingresses []unstructured.Unstructured, grk groupResourceKind) []unstructured.Unstructured {
+// e.g.: The client library is returning the same results for "extensions/v1beta1/Ingress" and "networking.k8s.io/v1/Ingress".
+func fixDeletedItemsList(dynClient dynamic.Interface, oldApiItems []unstructured.Unstructured, grk groupResourceKind) []unstructured.Unstructured {
 
-	_, stableIngresses := getResources(dynClient, grk)
-	stableIngressesMap := make(map[string]bool)
+	_, newApiItems := getResources(dynClient, grk)
+	newApiItemsMap := make(map[string]bool)
 
-	for _, item := range stableIngresses.Items {
+	for _, item := range newApiItems.Items {
 		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
-		stableIngressesMap[uid] = true
+		newApiItemsMap[uid] = true
 	}
 
 	deletedItems := []unstructured.Unstructured{}
-	for _, item := range v1beta1Ingresses {
+	for _, item := range oldApiItems {
 		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
-		// Only adds to the deleted list if not found in the stable ingresses list
-		if !stableIngressesMap[uid] {
+		// Only adds to the deleted list if not found in the new API list
+		if !newApiItemsMap[uid] {
 			deletedItems = append(deletedItems, item)
 		}
 	}
