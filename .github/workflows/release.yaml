@@ -39,7 +39,7 @@ jobs:
         with:
           install-only: true
 
-      - uses: imjasonh/setup-ko@v0.4
+      - uses: imjasonh/setup-ko@v0.5
 
       - name: build release binaries
         run: make release
