@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.5.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.24.4
-	k8s.io/cli-runtime v0.24.3
+	k8s.io/cli-runtime v0.24.4
 	k8s.io/client-go v0.24.4
 	sigs.k8s.io/release-utils v0.7.3
 	sigs.k8s.io/yaml v1.3.0
