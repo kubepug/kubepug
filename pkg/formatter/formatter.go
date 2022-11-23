@@ -12,6 +12,8 @@ type Formatter interface {
 // NewFormatter returns a new instance of formatter
 func NewFormatter(t string) Formatter {
 	switch t {
+	case "apiversions":
+		return newAPIVersionsFormatter()
 	case "stdout":
 		return newSTDOUTFormatter()
 	case "plain":

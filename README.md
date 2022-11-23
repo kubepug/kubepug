@@ -20,7 +20,10 @@ Just run `kubectl krew install deprecations`
 If you want to verify the generated manifests by Helm, you can run the program as following:
 
 ```console
-helm template -f values.yaml .0 | kubepug --k8s-version v1.22.0 --input-file=-
+K8S_VERSION=v1.25.0
+helm template -f values.yaml --kube-version=$K8S_VERSION \
+  $(kubepug api-versions --k8s-version $K8S_VERSION | awk '{printf "--api-versions %s ",$0}') . | \
+  kubepug --k8s-version $K8S_VERSION --input-file=-
 ```
 
 Change the arguments in kubepug program (and Helm template!) as desired!
@@ -136,7 +139,7 @@ env:
   K8S_TARGET_VERSION: "v1.22.0"
 
 jobs:
- api-deprecations-test:
+  api-deprecations-test:
     runs-on: ubuntu-latest
     steps:
       - name: Check-out repo
@@ -152,6 +155,40 @@ jobs:
       - name: Run Kubepug with your Helm Charts Repository
         run: |
           find charts -mindepth 1 -maxdepth 1 -type d | xargs -t -n1 -I% /bin/bash -c 'helm template % --api-versions ${K8S_TARGET_VERSION} | kubepug --error-on-deprecated --error-on-deleted --k8s-version ${K8S_TARGET_VERSION} --input-file /dev/stdin'
+```
+
+## Output Kubernetes API Versions for a specific version
+
+While `kubectl api-versions` provides a list of API Groups/Versions, `kubepug api-versions --k8s-version=K8S_VERSION` provides a list of API Groups/Versions for the specific Kubernetes version.
+
+```console
+$ kubepug api-versions --k8s-version=v1.25.0
+admissionregistration.k8s.io/v1
+apiextensions.k8s.io/v1
+apiregistration.k8s.io/v1
+apps/v1
+authentication.k8s.io/v1
+authorization.k8s.io/v1
+autoscaling/v1
+autoscaling/v2
+autoscaling/v2beta2
+batch/v1
+certificates.k8s.io/v1
+coordination.k8s.io/v1
+discovery.k8s.io/v1
+events.k8s.io/v1
+flowcontrol.apiserver.k8s.io/v1beta1
+flowcontrol.apiserver.k8s.io/v1beta2
+internal.apiserver.k8s.io/v1alpha1
+networking.k8s.io/v1
+networking.k8s.io/v1alpha1
+node.k8s.io/v1
+policy/v1
+rbac.authorization.k8s.io/v1
+scheduling.k8s.io/v1
+storage.k8s.io/v1
+storage.k8s.io/v1beta1
+v1
 ```
 
 ## Screenshot
