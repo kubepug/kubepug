@@ -27,7 +27,7 @@ jobs:
         uses: docker/setup-qemu-action@8b122486cedac8393e77aa9734c3528886e4a1a8 # v2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # v2
+        uses: docker/setup-buildx-action@f03ac48505955848960e80bbb68046aa35c7b9e7 # v2
 
       - uses: actions/setup-go@84cbf8094393cdc5fe1fe1671ff2647332956b1a # v3
         with:
