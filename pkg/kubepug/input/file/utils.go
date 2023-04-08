@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -48,9 +47,16 @@ func GetFileItems(location string) (fileItems FileItems) {
 	}
 
 	if fileLocation.IsDir() {
-		filesInfo, err = ioutil.ReadDir(location) // Too lazy to refactor right now :P
+		entries, err := os.ReadDir(location) // Too lazy to refactor right now :P
 		if err != nil {
 			log.Fatalf("error to read input location %s. Error: %v", location, err)
+		}
+		for _, entry := range entries {
+			info, err := entry.Info()
+			if err != nil {
+				log.Fatalf("error converting filedir to fileinfo: %s", err)
+			}
+			filesInfo = append(filesInfo, info)
 		}
 	} else {
 		filesInfo = append(filesInfo, fileLocation)

@@ -3,8 +3,9 @@ package k8sinput
 import (
 	"context"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"strings"
+
+	"github.com/davecgh/go-spew/spew"
 
 	log "github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -163,7 +164,6 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 
 			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Kind)
 			if _, ok := kubeAPIs[keyAPI]; !ok {
-
 				gvr, list := getResources(dynClient, groupResourceKind{resourceGroupVersion.GroupVersion, resource.Name, resource.Kind})
 
 				if newApi, ok := deletedApiReplacements[keyAPI]; ok {
@@ -191,7 +191,6 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 }
 
 func getResources(dynClient dynamic.Interface, grk groupResourceKind) (schema.GroupVersionResource, *unstructured.UnstructuredList) {
-
 	gv, err := schema.ParseGroupVersion(grk.GroupVersion)
 	if err != nil {
 		log.Fatalf("Failed to Parse GroupVersion of Resource: %s", err)
@@ -217,7 +216,6 @@ func getResources(dynClient dynamic.Interface, grk groupResourceKind) (schema.Gr
 // Removes the false positives deleted items
 // e.g.: The client library is returning the same results for "extensions/v1beta1/Ingress" and "networking.k8s.io/v1/Ingress".
 func fixDeletedItemsList(dynClient dynamic.Interface, oldApiItems []unstructured.Unstructured, grk groupResourceKind) []unstructured.Unstructured {
-
 	_, newApiItems := getResources(dynClient, grk)
 	newApiItemsMap := make(map[string]bool)
 

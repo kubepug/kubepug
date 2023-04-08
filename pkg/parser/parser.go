@@ -38,11 +38,11 @@ func (kubeAPIs KubernetesAPIs) PopulateKubeAPIMap(swaggerfile string) (err error
 		return fmt.Errorf("error parsing the JSON, file might be invalid: %v", err)
 	}
 
-	definitions := definitionsMap["definitions"].(map[string]interface{}) // nolint: errcheck
+	definitions := definitionsMap["definitions"].(map[string]interface{}) //nolint: errcheck
 
 	log.Debugf("Iteracting through %d definitions", len(definitions))
 	for k, value := range definitions {
-		val := value.(map[string]interface{}) // nolint: errcheck
+		val := value.(map[string]interface{}) //nolint: errcheck
 		log.Debugf("Getting API values from %s", k)
 
 		if kubeapivalue, valid := getKubeAPIValues(val); valid {
