@@ -84,7 +84,7 @@ func runPug(cmd *cobra.Command, args []string) error {
 	}
 
 	if filename != "" {
-		err = os.WriteFile(filename, bytes, 0o644) // nolint: gosec
+		err = os.WriteFile(filename, bytes, 0o644) //nolint: gosec
 		if err != nil {
 			return err
 		}
@@ -109,18 +109,18 @@ func init() {
 	kubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(rootCmd.Flags())
 
-	rootCmd.Flags().MarkHidden("as")                       // nolint: errcheck
-	rootCmd.Flags().MarkHidden("as-group")                 // nolint: errcheck
-	rootCmd.Flags().MarkHidden("cache-dir")                // nolint: errcheck
-	rootCmd.Flags().MarkHidden("certificate-authority")    // nolint: errcheck
-	rootCmd.Flags().MarkHidden("client-certificate")       // nolint: errcheck
-	rootCmd.Flags().MarkHidden("client-key")               // nolint: errcheck
-	rootCmd.Flags().MarkHidden("insecure-skip-tls-verify") // nolint: errcheck
-	rootCmd.Flags().MarkHidden("namespace")                // nolint: errcheck
-	rootCmd.Flags().MarkHidden("request-timeout")          // nolint: errcheck
-	rootCmd.Flags().MarkHidden("server")                   // nolint: errcheck
-	rootCmd.Flags().MarkHidden("token")                    // nolint: errcheck
-	rootCmd.Flags().MarkHidden("user")                     // nolint: errcheck
+	rootCmd.Flags().MarkHidden("as")                       //nolint: errcheck
+	rootCmd.Flags().MarkHidden("as-group")                 //nolint: errcheck
+	rootCmd.Flags().MarkHidden("cache-dir")                //nolint: errcheck
+	rootCmd.Flags().MarkHidden("certificate-authority")    //nolint: errcheck
+	rootCmd.Flags().MarkHidden("client-certificate")       //nolint: errcheck
+	rootCmd.Flags().MarkHidden("client-key")               //nolint: errcheck
+	rootCmd.Flags().MarkHidden("insecure-skip-tls-verify") //nolint: errcheck
+	rootCmd.Flags().MarkHidden("namespace")                //nolint: errcheck
+	rootCmd.Flags().MarkHidden("request-timeout")          //nolint: errcheck
+	rootCmd.Flags().MarkHidden("server")                   //nolint: errcheck
+	rootCmd.Flags().MarkHidden("token")                    //nolint: errcheck
+	rootCmd.Flags().MarkHidden("user")                     //nolint: errcheck
 
 	rootCmd.PersistentFlags().BoolVar(&apiWalk, "api-walk", true, "Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be I/O intensive to APIServer. Defaults to true")
 	rootCmd.PersistentFlags().BoolVar(&errorOnDeprecated, "error-on-deprecated", false, "If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false")

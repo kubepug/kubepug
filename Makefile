@@ -7,7 +7,7 @@ KO_PREFIX ?= ghcr.io/rikatz
 
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o ./kubepug .
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o ./output/kubepug .
 
 .PHONY: test
 test:
@@ -31,5 +31,5 @@ snapshot:
 
 .PHONY: clean
 clean:
-	rm -rf kubepug
+	rm -rf output/kubepug
 	rm -rf dist/

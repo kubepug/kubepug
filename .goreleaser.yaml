@@ -36,7 +36,7 @@ builds:
       - GO111MODULE=on
       - GOPROXY=https://proxy.golang.org
     main: .
-    binary: kubepug
+    binary: output/kubepug
 
 archives:
   - id: kubepug

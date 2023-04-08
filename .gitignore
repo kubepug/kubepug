@@ -8,7 +8,6 @@ files/*
 swagger-*
 output/*
 dist/*
-kubepug
 # Test binary, built with `go test -c`
 *.test
 
