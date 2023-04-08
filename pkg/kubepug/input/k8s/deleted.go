@@ -35,7 +35,7 @@ const (
 )
 
 // Maps the deleted APIs to its replacements
-var deletedApiReplacements = map[string]groupResourceKind{
+var deletedAPIReplacements = map[string]groupResourceKind{
 	"extensions/v1beta1/Ingress": {"networking.k8s.io/v1", "ingresses", "Ingress"},
 }
 
@@ -166,8 +166,8 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 			if _, ok := kubeAPIs[keyAPI]; !ok {
 				gvr, list := getResources(dynClient, groupResourceKind{resourceGroupVersion.GroupVersion, resource.Name, resource.Kind})
 
-				if newApi, ok := deletedApiReplacements[keyAPI]; ok {
-					list.Items = fixDeletedItemsList(dynClient, list.Items, newApi)
+				if newAPI, ok := deletedAPIReplacements[keyAPI]; ok {
+					list.Items = fixDeletedItemsList(dynClient, list.Items, newAPI)
 				}
 
 				if len(list.Items) > 0 {
@@ -215,20 +215,20 @@ func getResources(dynClient dynamic.Interface, grk groupResourceKind) (schema.Gr
 
 // Removes the false positives deleted items
 // e.g.: The client library is returning the same results for "extensions/v1beta1/Ingress" and "networking.k8s.io/v1/Ingress".
-func fixDeletedItemsList(dynClient dynamic.Interface, oldApiItems []unstructured.Unstructured, grk groupResourceKind) []unstructured.Unstructured {
-	_, newApiItems := getResources(dynClient, grk)
-	newApiItemsMap := make(map[string]bool)
+func fixDeletedItemsList(dynClient dynamic.Interface, oldAPIItems []unstructured.Unstructured, grk groupResourceKind) []unstructured.Unstructured {
+	_, newAPIItems := getResources(dynClient, grk)
+	newAPIItemsMap := make(map[string]bool)
 
-	for _, item := range newApiItems.Items {
+	for _, item := range newAPIItems.Items {
 		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
-		newApiItemsMap[uid] = true
+		newAPIItemsMap[uid] = true
 	}
 
 	deletedItems := []unstructured.Unstructured{}
-	for _, item := range oldApiItems {
+	for _, item := range oldAPIItems {
 		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
 		// Only adds to the deleted list if not found in the new API list
-		if !newApiItemsMap[uid] {
+		if !newAPIItemsMap[uid] {
 			deletedItems = append(deletedItems, item)
 		}
 	}

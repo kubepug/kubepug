@@ -12,7 +12,7 @@ import (
 type K8sInput struct {
 	K8sconfig *genericclioptions.ConfigFlags
 	K8sapi    parser.KubernetesAPIs
-	Apiwalk   bool
+	APIWalk   bool
 }
 
 // ListDeprecated lists the deprecated objects from a Kubernetes cluster
@@ -24,7 +24,7 @@ func (i K8sInput) ListDeprecated() (deprecatedapis []results.DeprecatedAPI) {
 
 // ListDeleted lists the non-existing objects in some K8s version from a Kubernetes cluster
 func (i K8sInput) ListDeleted() (deletedapis []results.DeletedAPI) {
-	if i.Apiwalk {
+	if i.APIWalk {
 		deletedapis = k8sinput.GetDeleted(i.K8sapi, i.K8sconfig)
 	}
 

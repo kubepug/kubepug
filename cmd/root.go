@@ -43,7 +43,7 @@ var (
 	}
 )
 
-func runPug(cmd *cobra.Command, args []string) error {
+func runPug(_ *cobra.Command, _ []string) error {
 	config := lib.Config{
 		K8sVersion:      k8sVersion,
 		ForceDownload:   forceDownload,

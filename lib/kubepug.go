@@ -66,7 +66,7 @@ func (k *Kubepug) getResults(kubeapis parser.KubernetesAPIs) *results.Result {
 		inputMode = kubepug.K8sInput{
 			K8sconfig: k.Config.ConfigFlags,
 			K8sapi:    kubeapis,
-			Apiwalk:   k.Config.APIWalk,
+			APIWalk:   k.Config.APIWalk,
 		}
 	}
 
