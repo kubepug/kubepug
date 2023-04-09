@@ -1,43 +1,47 @@
 name: ci
 on:
+  push:
+    branches:
+      - 'main'
   pull_request:
     branches:
-    - '*'
+      - '*'
 
 jobs:
 
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        with:
+          go-version: "1.20"
+          check-latest: true
+        id: go
 
-    - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v3
-      with:
-        go-version: "1.20"
-        check-latest: true
-      id: go
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3
+      - name: Add GOPATH/bin to PATH
+        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
-    - name: Add GOPATH/bin to PATH
-      run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      - name: Install dependencies
+        run: go mod download
 
-    - name: Install dependencies
-      run: go mod download
+      - name: Ensure go.mod is already tidied
+        run: go mod tidy && git diff --no-patch --exit-code
 
-    - name: Ensure go.mod is already tidied
-      run: go mod tidy && git diff --no-patch --exit-code
+      - name: Run Unit Tests
+        run: make test
 
-    - name: Run Unit Tests
-      run: make test
+      - name: Verify building
+        run: make build
 
-    - name: Verify building
-      run: make build
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
+        with:
+          install-only: true
 
-    - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v3
-      with:
-        install-only: true
+      - name: Verify goreleaser
+        run: make snapshot
 
-    - name: Verify goreleaser
-      run: make snapshot
+      - run: ./dist/kubepug_linux_amd64_v1/kubepug version

@@ -1,49 +1,77 @@
 project_name: kubepug
-release:
-  github:
-    owner: rikatz
-    name: kubepug
+
+env:
+  - COSIGN_YES=true
+
+before:
+  hooks:
+    - go mod tidy
+    - /bin/bash -c 'if [ -n "$(git --no-pager diff --exit-code go.mod go.sum)" ]; then exit 1; fi'
+
+gomod:
+  proxy: true
 
 builds:
   - id: kubepug
     goos:
-    - linux
-    - windows
-    - darwin
+      - linux
+      - windows
+      - darwin
     goarch:
-    - amd64
-    - arm64
-    - arm
-    - s390x
-    - ppc64le
+      - amd64
+      - arm64
+      - arm
+      - s390x
+      - ppc64le
     goarm:
       - 7
     ignore:
-    - goos: windows
-      goarch: arm64
-    - goos: windows
-      goarch: arm
-    - goos: windows
-      goarch: s390x
-    - goos: windows
-      goarch: ppc64le
+      - goos: windows
+        goarch: arm64
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: s390x
+      - goos: windows
+        goarch: ppc64le
     flags:
-    - -trimpath
+      - -trimpath
     ldflags:
-    - "{{ .Env.LDFLAGS }}"
+      - "{{ .Env.LDFLAGS }}"
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
-      - GOPROXY=https://proxy.golang.org
     main: .
-    binary: output/kubepug
+    binary: kubepug
+
+signs:
+  - id: checksum
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    cmd: cosign
+    args: ["sign-blob", "--output-signature", "${artifact}.sig", "--output-certificate", "${artifact}.pem", "${artifact}"]
+    artifacts: checksum
+  - id: packages
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    cmd: cosign
+    args: ["sign-blob", "--output-signature", "${artifact}.sig", "--output-certificate", "${artifact}.pem", "${artifact}"]
+    artifacts: archive
 
 archives:
   - id: kubepug
     builds:
-    - kubepug
+      - kubepug
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format: tar.gz
     format_overrides:
-    - goos: windows
-      format: zip
+      - goos: windows
+        format: zip
+
+changelog:
+  use: github-native
+
+release:
+  github:
+    owner: rikatz
+    name: kubepug
