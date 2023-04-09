@@ -1,17 +1,17 @@
-defaultBaseImage: gcr.io/distroless/base:nonroot
+defaultBaseImage: cgr.dev/chainguard/static:latest
 
 builds:
-- id: kubepug
-  dir: .
-  main: .
-  env:
-  - CGO_ENABLED=0
-  flags:
-  - -trimpath
-  - -tags
-  - "{{ .Env.GIT_HASH }}"
-  - -tags
-  - "{{ .Env.GIT_VERSION }}"
-  ldflags:
-  - -extldflags "-static"
-  - "{{ .Env.LDFLAGS }}"
+  - id: kubepug
+    dir: .
+    main: .
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+      - -tags
+      - "{{ .Env.GIT_HASH }}"
+      - -tags
+      - "{{ .Env.GIT_VERSION }}"
+    ldflags:
+      - -extldflags "-static"
+      - "{{ .Env.LDFLAGS }}"
