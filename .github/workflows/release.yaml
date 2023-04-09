@@ -23,6 +23,8 @@ jobs:
           go-version: "1.20"
           check-latest: true
 
+      - uses: sigstore/cosign-installer@9e9de2292db7abb3f51b7f4808d98f0d347a8919 # v3.0.2
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
         with:
@@ -38,8 +40,7 @@ jobs:
       - name: build and sign release container
         run: |
           make ko
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ./scripts/ko-sign-release-images.sh
 
       - name: Update new version in krew-index
         uses: rajatjindal/krew-release-bot@92da038bbf995803124a8e50ebd438b2f37bbbb0 # v0.0.43
