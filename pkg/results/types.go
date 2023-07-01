@@ -33,6 +33,7 @@ type DeletedAPI struct {
 
 // Result to show final user
 type Result struct {
+	APIVersions    []string        `json,yaml:"api_versions,omitempty"`
 	DeprecatedAPIs []DeprecatedAPI `json,yaml:"deprecated_apis,omitempty"`
 	DeletedAPIs    []DeletedAPI    `json,yaml:"deleted_apis,omitempty"`
 }
