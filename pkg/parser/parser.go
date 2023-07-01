@@ -19,7 +19,7 @@ func (kubeAPIs KubernetesAPIs) PopulateKubeAPIMap(swaggerfile string) (err error
 		return err
 	}
 
-	defs := &definitionsJson{}
+	defs := &definitionsJSON{}
 	err = json.Unmarshal(byteValue, defs)
 	if err != nil {
 		return fmt.Errorf("error parsing the JSON, file might be invalid: %v", err)

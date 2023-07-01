@@ -40,7 +40,6 @@ func NewKubepug(config Config) *Kubepug {
 
 // GetDeprecated returns the list of deprecated APIs
 func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
-
 	log.Infof("Downloading the swagger.json file")
 	swaggerfile, err := utils.DownloadSwaggerFile(k.Config.K8sVersion, k.Config.SwaggerDir, k.Config.ForceDownload)
 	if err != nil {

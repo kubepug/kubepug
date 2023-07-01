@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
-
 	log "github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -215,13 +213,19 @@ func fixDeletedItemsList(dynClient dynamic.Interface, oldAPIItems []unstructured
 	newAPIItemsMap := make(map[string]bool)
 
 	for _, item := range newAPIItems.Items {
-		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
+		uid, ok, err := unstructured.NestedString(item.Object, "metadata", "uid")
+		if !ok || err != nil {
+			continue
+		}
 		newAPIItemsMap[uid] = true
 	}
 
-	deletedItems := make([]unstructured.Unstructured, len(oldAPIItems))
+	deletedItems := make([]unstructured.Unstructured, 0)
 	for _, item := range oldAPIItems {
-		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
+		uid, ok, err := unstructured.NestedString(item.Object, "metadata", "uid")
+		if !ok || err != nil {
+			continue
+		}
 		// Only adds to the deleted list if not found in the new API list
 		if !newAPIItemsMap[uid] {
 			deletedItems = append(deletedItems, item)

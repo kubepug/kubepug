@@ -3,7 +3,6 @@ module github.com/rikatz/kubepug
 go 1.20
 
 require (
-	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.15.0
 	github.com/goccy/go-json v0.10.2
 	github.com/sirupsen/logrus v1.9.3
@@ -19,6 +18,7 @@ require (
 
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/go-errors/errors v1.4.2 // indirect

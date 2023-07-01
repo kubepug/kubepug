@@ -18,7 +18,7 @@ const (
 func downloadFile(filename, url string) error {
 	// Get the data
 	log.Debugf("Downloading file from %s", url)
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) //nolint: gosec
 	if err != nil {
 		return err
 	}

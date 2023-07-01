@@ -16,7 +16,7 @@ type KubeAPI struct {
 type KubernetesAPIs map[string]KubeAPI
 
 // definitionsJson defines the definitions structure to be unmarshalled
-type definitionsJson struct {
+type definitionsJSON struct {
 	Definitions map[string]struct {
 		Description      string `json:"description,omitempty"`
 		GroupVersionKind []struct {
