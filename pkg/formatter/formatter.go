@@ -1,6 +1,8 @@
 package formatter
 
 import (
+	"fmt"
+
 	"github.com/rikatz/kubepug/pkg/results"
 )
 
@@ -11,16 +13,26 @@ type Formatter interface {
 
 // NewFormatter returns a new instance of formatter
 func NewFormatter(t string) Formatter {
+	f, err := NewFormatterWithError(t)
+	if err != nil {
+		f = newSTDOUTFormatter()
+	}
+	return f
+}
+
+// NewFormatterWithError returns a formatter or an error that can be returned by the
+// formatter instance or in case the formatter is invalid
+func NewFormatterWithError(t string) (Formatter, error) {
 	switch t {
 	case "stdout":
-		return newSTDOUTFormatter()
+		return newSTDOUTFormatter(), nil
 	case "plain":
-		return newPlainFormatter()
+		return newPlainFormatter(), nil
 	case "json":
-		return newJSONFormatter()
+		return newJSONFormatter(), nil
 	case "yaml":
-		return newYamlFormatter()
+		return newYamlFormatter(), nil
 	default:
-		return newSTDOUTFormatter()
+		return nil, fmt.Errorf("invalid formatter selected: %s", t)
 	}
 }

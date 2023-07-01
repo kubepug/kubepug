@@ -29,20 +29,6 @@ func TestDownloadSwaggerFile(t *testing.T) {
 			filename:   fmt.Sprintf("%s/swagger-v1.19.0.json", tmpdir),
 			expected:   "",
 		},
-		"Invalid directory": {
-			version:    "v1.19.0",
-			swaggerdir: fmt.Sprintf("%s/lalalaldsa", tmpdir),
-			force:      false,
-			filename:   "",
-			expected:   fmt.Sprintf("directory %s/lalalaldsa does not exist or is already created as a file", tmpdir),
-		},
-		"Tries to use an existing file": {
-			version:    "v1.19.0",
-			swaggerdir: "/bin/clear",
-			force:      false,
-			filename:   "",
-			expected:   "directory /bin/clear does not exist or is already created as a file",
-		},
 		"Invalid kubernetes version": {
 			version:    "v1.19.xxx",
 			swaggerdir: tmpdir,

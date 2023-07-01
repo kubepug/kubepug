@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/mod/semver"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -33,15 +36,60 @@ var (
 	inputFile         string
 	logLevel          string
 
+	outputFormatter formatter.Formatter
+
 	rootCmd = &cobra.Command{
 		Use:          filepath.Base(os.Args[0]),
 		SilenceUsage: true,
 		Short:        "Shows all the deprecated objects in a Kubernetes cluster allowing the operator to verify them before upgrading the cluster.\nIt uses the swagger.json version available in master branch of Kubernetes repository (github.com/kubernetes/kubernetes) as a reference.",
 		Example:      filepath.Base(os.Args[0]),
 		Args:         cobra.MinimumNArgs(0),
+		PreRunE:      Complete,
 		RunE:         runPug,
 	}
 )
+
+func Complete(_ *cobra.Command, _ []string) error {
+	var errComplete error
+	var err error
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		DisableColors: true,
+		FullTimestamp: true,
+	})
+
+	if k8sVersion != "master" && k8sVersion != "main" && !semver.IsValid(k8sVersion) {
+		errComplete = errors.Join(errComplete, fmt.Errorf("invalid Kubernetes version, should be 'master' or a valid semantic version"))
+	}
+
+	if swaggerDir != "" {
+		dir, err := os.Stat(swaggerDir)
+		if os.IsNotExist(err) || !dir.IsDir() {
+			errComplete = errors.Join(errComplete, fmt.Errorf("directory %s does not exist or is already created as a file", swaggerDir))
+		}
+	}
+
+	outputFormatter, err = formatter.NewFormatterWithError(format)
+	if err != nil {
+		errComplete = errors.Join(errComplete, err)
+	}
+
+	lvl, err := logrus.ParseLevel(logLevel)
+	if err != nil {
+		errComplete = errors.Join(errComplete, err)
+	}
+
+	if errComplete != nil {
+		return errComplete
+	}
+
+	logrus.SetLevel(lvl)
+
+	if lvl == logrus.DebugLevel {
+		logrus.SetReportCaller(true)
+	}
+	return nil
+}
 
 func runPug(_ *cobra.Command, _ []string) error {
 	config := lib.Config{
@@ -54,20 +102,6 @@ func runPug(_ *cobra.Command, _ []string) error {
 		Input:           inputFile,
 	}
 
-	lvl, err := logrus.ParseLevel(logLevel)
-	if err != nil {
-		return err
-	}
-	logrus.SetLevel(lvl)
-
-	logrus.SetFormatter(&logrus.TextFormatter{
-		DisableColors: true,
-		FullTimestamp: true,
-	})
-	if lvl == logrus.DebugLevel {
-		logrus.SetReportCaller(true)
-	}
-
 	logrus.Debugf("Starting Kubepug with configs: %+v", config)
 	kubepug := lib.NewKubepug(config)
 
@@ -77,8 +111,7 @@ func runPug(_ *cobra.Command, _ []string) error {
 	}
 
 	logrus.Debug("Starting deprecated objects printing")
-	format := formatter.NewFormatter(format)
-	bytes, err := format.Output(*result)
+	bytes, err := outputFormatter.Output(*result)
 	if err != nil {
 		return err
 	}
@@ -133,7 +166,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
 	rootCmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analysed. Use \"-\" to read from STDIN")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
-
 	rootCmd.AddCommand(version.WithFont("starwars"))
 }
 

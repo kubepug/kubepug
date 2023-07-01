@@ -158,30 +158,29 @@ func GetDeleted(kubeAPIs parser.KubernetesAPIs, config *genericclioptions.Config
 
 		for i := range resourceGroupVersion.APIResources {
 			resource := &resourceGroupVersion.APIResources[i] // We don't want to check subObjects (like pods/status)
-			if len(strings.Split(resource.Name, "/")) != 1 {
-				continue
-			}
 
-			keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Kind)
-			if _, ok := kubeAPIs[keyAPI]; !ok {
-				gvr, list := getResources(dynClient, groupResourceKind{resourceGroupVersion.GroupVersion, resource.Name, resource.Kind})
+			if len(strings.Split(resource.Name, "/")) == 1 {
+				keyAPI := fmt.Sprintf("%s/%s", resourceGroupVersion.GroupVersion, resource.Kind)
+				if _, ok := kubeAPIs[keyAPI]; !ok {
+					gvr, list := getResources(dynClient, groupResourceKind{resourceGroupVersion.GroupVersion, resource.Name, resource.Kind})
 
-				if newAPI, ok := deletedAPIReplacements[keyAPI]; ok {
-					list.Items = fixDeletedItemsList(dynClient, list.Items, newAPI)
-				}
-
-				if len(list.Items) > 0 {
-					log.Debugf("Found %d deleted items in %s/%s", len(list.Items), gvr.Group, resource.Kind)
-					d := results.DeletedAPI{
-						Deleted: true,
-						Name:    resource.Name,
-						Group:   gvr.Group,
-						Kind:    resource.Kind,
-						Version: gvr.Version,
+					if newAPI, ok := deletedAPIReplacements[keyAPI]; ok {
+						list.Items = fixDeletedItemsList(dynClient, list.Items, newAPI)
 					}
 
-					d.Items = results.ListObjects(list.Items)
-					deleted = append(deleted, d)
+					if len(list.Items) > 0 {
+						log.Debugf("Found %d deleted items in %s/%s", len(list.Items), gvr.Group, resource.Kind)
+						d := results.DeletedAPI{
+							Deleted: true,
+							Name:    resource.Name,
+							Group:   gvr.Group,
+							Kind:    resource.Kind,
+							Version: gvr.Version,
+						}
+
+						d.Items = results.ListObjects(list.Items)
+						deleted = append(deleted, d)
+					}
 				}
 			}
 		}
@@ -202,10 +201,6 @@ func getResources(dynClient dynamic.Interface, grk groupResourceKind) (schema.Gr
 		return gvr, list
 	}
 
-	if apierrors.IsForbidden(err) {
-		log.Fatalf("Failed to list Server Resources of type %s/%s/%s. Permission denied! Please check if you have the proper authorization", gv.Group, gv.Version, grk.ResourceKind)
-	}
-
 	if err != nil {
 		log.Fatalf("Failed to List objects of type %s/%s/%s. \nError: %v", gv.Group, gv.Version, grk.ResourceKind, err)
 	}
@@ -224,7 +219,7 @@ func fixDeletedItemsList(dynClient dynamic.Interface, oldAPIItems []unstructured
 		newAPIItemsMap[uid] = true
 	}
 
-	deletedItems := []unstructured.Unstructured{}
+	deletedItems := make([]unstructured.Unstructured, len(oldAPIItems))
 	for _, item := range oldAPIItems {
 		uid := spew.Sprint(item.Object["metadata"].(map[string]interface{})["uid"])
 		// Only adds to the deleted list if not found in the new API list
