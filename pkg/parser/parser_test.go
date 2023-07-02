@@ -8,6 +8,33 @@ import (
 	"testing"
 )
 
+const (
+	testdatalocation = "../../test/testdata/swagger"
+)
+
+var k8sversions = []struct {
+	version string
+}{
+	{version: "v1.19.5"},
+	{version: "v1.23.4"},
+	{version: "v1.27.2"},
+}
+
+func BenchmarkParser(b *testing.B) {
+	for _, v := range k8sversions {
+		b.Run(fmt.Sprintf("version_%s", v.version), func(b *testing.B) {
+			swaggerfile := fmt.Sprintf("%s/swagger-%s.json", testdatalocation, v.version)
+			for i := 0; i < b.N; i++ {
+				o := KubernetesAPIs{}
+				err := o.PopulateKubeAPIMap(swaggerfile)
+				if err != nil {
+					b.Error(err)
+				}
+			}
+		})
+	}
+}
+
 func TestPopulateKubeAPIs(t *testing.T) {
 	mockcontentvalid := `
 	{
@@ -128,7 +155,7 @@ func TestPopulateKubeAPIs(t *testing.T) {
 			KubeAPIs:    KubernetesAPIs{},
 			swaggerfile: "/tmp/invalidtest1.json",
 			mockcontent: mockcontentinvalidjson,
-			expectederr: "error parsing the JSON, file might be invalid: invalid character '{' looking for beginning of object key string",
+			expectederr: "error parsing the JSON, file might be invalid: json: cannot unmarshal object into Go struct field definitionsJSON.Definitions of type string",
 		},
 		"some empty objects because of empty description": {
 			KubeAPIs: KubernetesAPIs{
@@ -159,7 +186,7 @@ func TestPopulateKubeAPIs(t *testing.T) {
 			o := KubernetesAPIs{}
 			err = o.PopulateKubeAPIMap(tc.swaggerfile)
 			if err != nil && err.Error() != tc.expectederr {
-				t.Errorf("Failed to populate the map: Got %v exoected %v", err, tc.expectederr)
+				t.Errorf("Failed to populate the map: Got %v expected %v", err, tc.expectederr)
 			}
 
 			eq := reflect.DeepEqual(o, tc.KubeAPIs)

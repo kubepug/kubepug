@@ -13,16 +13,22 @@ import (
 // Config configuration object for Kubepug
 // configurations for kubernetes and for kubepug functionality
 type Config struct {
-	K8sVersion      string
-	ForceDownload   bool
-	APIWalk         bool
-	SwaggerDir      string
+	// K8sVersion defines what is the Kubernetes version that the validation should target.
+	// Should be on the Kubernetes semver format: v1.24.5
+	K8sVersion string
+	// ForceDownload defines if the download should happen even if the swagger file already exists
+	ForceDownload bool
+	// APIWalk defines if the expensive operation of checking every object should happen
+	APIWalk bool
+	// SwaggerDir defines where the swagger file should be saved. If empty, a temporary directory will be created and used.
+	SwaggerDir string
+	// ShowDescription defines if the description of the API should be copied to the output result
 	ShowDescription bool
 	Input           string
 	ConfigFlags     *genericclioptions.ConfigFlags
 }
 
-// Kubepug struct to be used
+// Kubepug defines a kubepug instance to be used
 type Kubepug struct {
 	Config Config
 }
@@ -34,16 +40,13 @@ func NewKubepug(config Config) *Kubepug {
 
 // GetDeprecated returns the list of deprecated APIs
 func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
-	log.Debugf("Populating the KubernetesAPI map from swagger.json")
-
-	kubernetesAPIs := make(parser.KubernetesAPIs)
-
 	log.Infof("Downloading the swagger.json file")
 	swaggerfile, err := utils.DownloadSwaggerFile(k.Config.K8sVersion, k.Config.SwaggerDir, k.Config.ForceDownload)
 	if err != nil {
 		return &results.Result{}, err
 	}
 
+	kubernetesAPIs := make(parser.KubernetesAPIs)
 	log.Infof("Populating the Deprecated Kubernetes APIs Map")
 	err = kubernetesAPIs.PopulateKubeAPIMap(swaggerfile)
 

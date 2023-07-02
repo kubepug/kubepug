@@ -35,14 +35,14 @@ func DiscoverResourceNameAndPreferredGV(client *discovery.DiscoveryClient) Prefe
 		log.Fatalf("Failed communicating with k8s while discovering the object preferred name and gv. Error: %v", err)
 	}
 
-	for _, rl := range resourcelist {
-		for i := range rl.APIResources {
+	for rli := range resourcelist {
+		for i := range resourcelist[rli].APIResources {
 			item := ResourceStruct{
-				GroupVersion: rl.GroupVersion,
-				ResourceName: rl.APIResources[i].Name,
+				GroupVersion: resourcelist[rli].GroupVersion,
+				ResourceName: resourcelist[rli].APIResources[i].Name,
 			}
 
-			gvk := fmt.Sprintf("%v/%v", rl.GroupVersion, rl.APIResources[i].Kind)
+			gvk := fmt.Sprintf("%v/%v", resourcelist[rli].GroupVersion, resourcelist[rli].APIResources[i].Kind)
 			pr[gvk] = item
 		}
 	}
