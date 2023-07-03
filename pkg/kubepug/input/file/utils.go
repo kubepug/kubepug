@@ -30,31 +30,31 @@ type FileStruct struct {
 type FileItems map[string][]results.Item
 
 // GetFileItems converts a bunch of input files into a map of Items
-func GetFileItems(location string) (fileItems FileItems) {
+func GetFileItems(location string) (fileItems FileItems, err error) {
 	fileItems = make(FileItems)
 	// First we get the list of files
 
 	if location == "-" {
 		fileItems.yamlToMap(nil, "-", false)
-		return fileItems
+		return fileItems, nil
 	}
 
 	var filesInfo []os.FileInfo
 
 	fileLocation, err := os.Stat(location)
 	if os.IsNotExist(err) {
-		log.Fatalf("input location %s does not exist", location)
+		return nil, fmt.Errorf("input location %s does not exist", location)
 	}
 
 	if fileLocation.IsDir() {
 		entries, err := os.ReadDir(location) // Too lazy to refactor right now :P
 		if err != nil {
-			log.Fatalf("error to read input location %s. Error: %v", location, err)
+			return nil, fmt.Errorf("error to read input location %s: %w", location, err)
 		}
 		for _, entry := range entries {
 			info, err := entry.Info()
 			if err != nil {
-				log.Fatalf("error converting filedir to fileinfo: %s", err)
+				return nil, fmt.Errorf("error converting filedir to fileinfo: %w", err)
 			}
 			filesInfo = append(filesInfo, info)
 		}
@@ -67,7 +67,7 @@ func GetFileItems(location string) (fileItems FileItems) {
 		fileItems.yamlToMap(file, location, fileLocation.IsDir())
 	}
 
-	return fileItems
+	return fileItems, nil
 }
 
 // Yaml to Map takes a YAML and insert its items into the FileItems Map

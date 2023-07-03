@@ -6,7 +6,6 @@ type DeprecatedAPI struct {
 	Group       string `json,yaml:"group,omitempty"`
 	Kind        string `json,yaml:"kind,omitempty"`
 	Version     string `json,yaml:"version,omitempty"`
-	Name        string `json,yaml:"name,omitempty"`
 	// TODO: What is this boolean for? All APIs here aren't already marked as Deprecated?
 	Deprecated bool   `json,yaml:"deprecated,omitempty"`
 	Items      []Item `json,yaml:"deprecated_items,omitempty"`
@@ -25,14 +24,21 @@ type DeletedAPI struct {
 	Group   string `json,yaml:"group,omitempty"`
 	Kind    string `json,yaml:"kind,omitempty"`
 	Version string `json,yaml:"version,omitempty"`
-	Name    string `json,yaml:"name,omitempty"`
 	// TODO: What is this boolean for? All APIs here aren't already marked as Deleted?
 	Deleted bool   `json,yaml:"deleted,omitempty"`
 	Items   []Item `json,yaml:"deleted_items,omitempty"`
 }
 
+type ResultItem struct {
+	Group       string `json,yaml:"group,omitempty"`
+	Kind        string `json,yaml:"kind,omitempty"`
+	Version     string `json,yaml:"version,omitempty"`
+	Description string `json,yaml:"description,omitempty"`
+	Items       []Item `json,yaml:"deleted_items,omitempty"`
+}
+
 // Result to show final user
 type Result struct {
-	DeprecatedAPIs []DeprecatedAPI `json,yaml:"deprecated_apis,omitempty"`
-	DeletedAPIs    []DeletedAPI    `json,yaml:"deleted_apis,omitempty"`
+	DeprecatedAPIs []ResultItem `json,yaml:"deprecated_apis,omitempty"`
+	DeletedAPIs    []ResultItem `json,yaml:"deleted_apis,omitempty"`
 }
