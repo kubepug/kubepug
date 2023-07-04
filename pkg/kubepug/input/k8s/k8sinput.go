@@ -33,6 +33,14 @@ type K8sInput struct {
 	IgnoreExactGroup []string
 }
 
+var deprecatedAPIReplacements = map[string]schema.GroupVersionResource{
+	"extensions/v1beta1/Ingress": {
+		Group:    "networking.k8s.io",
+		Version:  "v1",
+		Resource: "ingresses",
+	},
+}
+
 var listItems = func(client dynamic.Interface, apigroup string) parser.ListerFunc {
 	return func(group, version, resource, kind string) (results.ResultItem, error) {
 		result := results.ResultItem{}
@@ -83,6 +91,17 @@ func (f *K8sInput) getResourceDeprecation(resources *metav1.APIResourceList) (de
 	}
 
 	for i := range resources.APIResources {
+		replacement, err := f.checkForReplacement(gv.Group, gv.Version, resources.APIResources[i].Kind)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// If there is a proper API replacement, we can just skip
+		if replacement != "" {
+			logrus.Infof("found replacement %s for %s/%s/%s, skipping", replacement, gv.Group, gv.Version, resources.APIResources[i].Kind)
+			continue
+		}
+
 		// We use internally the Core API string to get our groups
 		group := gv.Group
 		if group == "" {
@@ -119,4 +138,31 @@ func getResources(dynClient dynamic.Interface, group, version, resource string) 
 	items := results.ListObjects(list.Items)
 
 	return items, nil
+}
+
+// Before checking for the API, we need to verify if it already have a proper replacement on the server.
+// The example here is on Ingress API. It formerly existed on a different group (extensions/v1beta1) and
+// was migrated to networking.k8s.io/v1, so at some moment a server would have two preferred resources, one for extensions
+// and one for networking.k8s.io. In this case, even querying extensions/v1beta1 would return objects and generate a false positive
+// so we need to verify if the replacement also exists.
+func (f *K8sInput) checkForReplacement(group, version, kind string) (string, error) {
+	keyForReplacement := fmt.Sprintf("%s/%s/%s", group, version, kind)
+	if replacement, ok := deprecatedAPIReplacements[keyForReplacement]; ok {
+		apiresources, err := f.DiscoveryClient.ServerResourcesForGroupVersion(replacement.GroupVersion().String())
+		if err != nil {
+			if !discovery.IsGroupDiscoveryFailedError(err) {
+				return "", err
+			}
+			logrus.Warningf("failed to get resources for groupversion %s, this can generate a false positive", replacement.GroupVersion().String())
+		}
+		if apiresources != nil {
+			for i := range apiresources.APIResources {
+				if apiresources.APIResources[i].Name == replacement.Resource {
+					return fmt.Sprintf("%s/%s", replacement.GroupVersion().String(), apiresources.APIResources[i].Kind), nil
+				}
+			}
+		}
+	}
+	// No replacement was found
+	return "", nil
 }
