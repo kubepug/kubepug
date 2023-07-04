@@ -49,7 +49,10 @@ var listItems = func(client dynamic.Interface, apigroup string) parser.ListerFun
 func (f *K8sInput) GetDeprecations() (deprecated, deleted []results.ResultItem, err error) {
 	apiresources, err := f.DiscoveryClient.ServerPreferredResources()
 	if err != nil {
-		return deprecated, deleted, err
+		if !discovery.IsGroupDiscoveryFailedError(err) {
+			return deprecated, deleted, err
+		}
+		logrus.Warningf("failed to discovery some apiresources, they will be skipped: %s", err)
 	}
 
 	for _, reslist := range apiresources {
