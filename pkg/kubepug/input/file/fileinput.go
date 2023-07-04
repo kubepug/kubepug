@@ -30,7 +30,8 @@ func NewFileInput(location string, k8sapi parser.APIGroups) (fileInput *FileInpu
 
 	fileInput.Database = k8sapi
 	fileInput.FileItems = fileitems
-	fileInput.IgnoreExactGroup = []string{"externaldns.k8s.io", "x-k8s.io", "flowcontrol.apiserver.k8s.io"}
+	// The groups below are: externaldns (not core), anything on x-k8s.io, internal flowcontrol and the autoscaling group that is actually a CRD (the real autoscaling is just autoscaling/version)
+	fileInput.IgnoreExactGroup = []string{"externaldns.k8s.io", "x-k8s.io", "flowcontrol.apiserver.k8s.io", "autoscaling.k8s.io"}
 	fileInput.IncludePrefixGroup = []string{".k8s.io"}
 
 	return fileInput, nil

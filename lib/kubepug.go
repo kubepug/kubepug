@@ -5,6 +5,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 
 	"github.com/rikatz/kubepug/pkg/kubepug"
 	fileinput "github.com/rikatz/kubepug/pkg/kubepug/input/file"
@@ -77,6 +78,7 @@ func (k *Kubepug) getResults(kubeapis parser.APIGroups) *results.Result {
 		if err != nil {
 			log.Fatalf("Failed to create the K8s config parameters while listing Deprecated objects: %s", err)
 		}
+		rest.SetDefaultWarningHandler(rest.NoWarnings{})
 
 		client, err := dynamic.NewForConfig(configRest)
 		if err != nil {
@@ -96,7 +98,8 @@ func (k *Kubepug) getResults(kubeapis parser.APIGroups) *results.Result {
 			Client:             client,
 			DiscoveryClient:    disco,
 			IncludePrefixGroup: []string{".k8s.io"},
-			IgnoreExactGroup:   []string{"externaldns.k8s.io", "x-k8s.io", "flowcontrol.apiserver.k8s.io"},
+			// The groups below are: externaldns (not core), anything on x-k8s.io, internal flowcontrol and the autoscaling group that is actually a CRD (the real autoscaling is just autoscaling/version)
+			IgnoreExactGroup: []string{"externaldns.k8s.io", "x-k8s.io", "flowcontrol.apiserver.k8s.io", "autoscaling.k8s.io"},
 		}
 	}
 
