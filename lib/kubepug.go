@@ -98,7 +98,8 @@ func (k *Kubepug) getResults(kubeapis parser.APIGroups) *results.Result {
 			Client:             client,
 			DiscoveryClient:    disco,
 			IncludePrefixGroup: []string{".k8s.io"},
-			IgnoreExactGroup:   []string{"externaldns.k8s.io", "x-k8s.io", "flowcontrol.apiserver.k8s.io"},
+			// The groups below are: externaldns (not core), anything on x-k8s.io, internal flowcontrol and the autoscaling group that is actually a CRD (the real autoscaling is just autoscaling/version)
+			IgnoreExactGroup: []string{"externaldns.k8s.io", "x-k8s.io", "flowcontrol.apiserver.k8s.io", "autoscaling.k8s.io"},
 		}
 	}
 
