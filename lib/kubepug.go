@@ -3,8 +3,13 @@ package lib
 import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 
 	"github.com/rikatz/kubepug/pkg/kubepug"
+	fileinput "github.com/rikatz/kubepug/pkg/kubepug/input/file"
+	k8sinput "github.com/rikatz/kubepug/pkg/kubepug/input/k8s"
+
 	"github.com/rikatz/kubepug/pkg/parser"
 	"github.com/rikatz/kubepug/pkg/results"
 	"github.com/rikatz/kubepug/pkg/utils"
@@ -46,12 +51,10 @@ func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
 		return &results.Result{}, err
 	}
 
-	kubernetesAPIs := make(parser.KubernetesAPIs)
 	log.Infof("Populating the Deprecated Kubernetes APIs Map")
-	err = kubernetesAPIs.PopulateKubeAPIMap(swaggerfile)
-
+	kubernetesAPIs, err := parser.NewAPIGroupsFromSwaggerFile(swaggerfile)
 	if err != nil {
-		return &results.Result{}, err
+		return nil, err
 	}
 
 	log.Debugf("Kubernetes APIs Populated: %#v", kubernetesAPIs)
@@ -61,18 +64,45 @@ func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
 	return result, nil
 }
 
-func (k *Kubepug) getResults(kubeapis parser.KubernetesAPIs) *results.Result {
+func (k *Kubepug) getResults(kubeapis parser.APIGroups) *results.Result {
 	var inputMode kubepug.Deprecator
+	var err error
 	if k.Config.Input != "" {
-		inputMode = kubepug.NewFileInput(k.Config.Input, kubeapis)
+		inputMode, err = fileinput.NewFileInput(k.Config.Input, kubeapis)
+		if err != nil {
+			log.Fatal(err)
+		}
 	} else {
-		inputMode = kubepug.K8sInput{
-			K8sconfig: k.Config.ConfigFlags,
-			K8sapi:    kubeapis,
-			APIWalk:   k.Config.APIWalk,
+		configRest, err := k.Config.ConfigFlags.ToRESTConfig()
+		if err != nil {
+			log.Fatalf("Failed to create the K8s config parameters while listing Deprecated objects: %s", err)
+		}
+
+		client, err := dynamic.NewForConfig(configRest)
+		if err != nil {
+			log.Fatalf("Failed to create the K8s client while listing Deprecated objects: %s", err)
+		}
+
+		// Feed the KubeAPIs with the resourceName as this is used to the K8s Resource lister
+		disco, err := discovery.NewDiscoveryClientForConfig(configRest)
+		if err != nil {
+			log.Fatalf("Failed to create the K8s Discovery client: %s", err)
+		}
+		// TODO: Use a constructor
+		inputMode = &k8sinput.K8sInput{
+			K8sconfig:          k.Config.ConfigFlags,
+			Database:           kubeapis,
+			APIWalk:            k.Config.APIWalk,
+			Client:             client,
+			DiscoveryClient:    disco,
+			IncludePrefixGroup: []string{".k8s.io"},
+			IgnoreExactGroup:   []string{"externaldns.k8s.io", "x-k8s.io", "flowcontrol.apiserver.k8s.io"},
 		}
 	}
 
-	output := kubepug.GetDeprecations(inputMode)
+	output, err := kubepug.GetDeprecations(inputMode)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &output
 }

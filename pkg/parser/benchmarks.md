@@ -17,4 +17,7 @@ BenchmarkParser/version_v1.19.5-16         	     156	   6719525 ns/op	10979240 B
 BenchmarkParser/version_v1.23.4-16         	     207	   5917886 ns/op	 9719129 B/op	    3475 allocs/op
 BenchmarkParser/version_v1.27.2-16         	     194	   6370366 ns/op	10671241 B/op	    3489 allocs/op
 
-
+New struct parser
+BenchmarkNewStructParser/version_v1.19.5-16         	     174	   6659184 ns/op	11048334 B/op	    3438 allocs/op
+BenchmarkNewStructParser/version_v1.23.4-16         	     201	   6304688 ns/op	 9774612 B/op	    3112 allocs/op
+BenchmarkNewStructParser/version_v1.27.2-16         	     187	   6314489 ns/op	10728635 B/op	    3112 allocs/op

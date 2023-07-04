@@ -6,57 +6,112 @@ import (
 	"strings"
 
 	json "github.com/goccy/go-json"
+	"github.com/rikatz/kubepug/pkg/results"
 
 	log "github.com/sirupsen/logrus"
 )
 
-// PopulateKubeAPIMap Converts a Swagger Definition into a map of KubeAPIs["group/version/kind"]
-func (kubeAPIs KubernetesAPIs) PopulateKubeAPIMap(swaggerfile string) (err error) {
-	// Open our jsonFile
+func NewAPIGroupsFromSwaggerFile(swaggerfile string) (APIGroups, error) {
+	defs, err := newDefinitionsFromFile(swaggerfile)
+	if err != nil {
+		return nil, err
+	}
+	apigroup := make(APIGroups)
+	for _, definition := range defs.Definitions {
+		var deprecated bool
+		if strings.Contains(strings.ToLower(definition.Description), "deprecated") {
+			log.Debugf("API Definition does not contains the word DEPRECATED in its description, skipping")
+			deprecated = true
+		}
+		for _, groups := range definition.GroupVersionKind {
+			if groups.Group == "" {
+				groups.Group = CoreAPI // Special type for Core APIs
+			}
+			if _, ok := apigroup[groups.Group]; !ok {
+				apigroup[groups.Group] = make(APIKinds)
+			}
+			if _, ok := apigroup[groups.Group][groups.Kind]; !ok {
+				apigroup[groups.Group][groups.Kind] = make(APIVersion)
+			}
+
+			apigroup[groups.Group][groups.Kind][groups.Version] = APIVersionStatus{
+				Description: definition.Description,
+				Deprecated:  deprecated,
+			}
+		}
+	}
+	return apigroup, nil
+}
+
+func newDefinitionsFromFile(swaggerfile string) (*definitionsJSON, error) {
 	log.Debugf("Opening the swagger file for reading: %s", swaggerfile)
 	byteValue, err := os.ReadFile(swaggerfile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defs := &definitionsJSON{}
 	err = json.Unmarshal(byteValue, defs)
 	if err != nil {
-		return fmt.Errorf("error parsing the JSON, file might be invalid: %v", err)
+		return nil, fmt.Errorf("error parsing the JSON, file might be invalid: %v", err)
+	}
+	return defs, nil
+}
+
+type ListerFunc func(group, version, resource, kind string) (results.ResultItem, error)
+
+// CheckForItem verifies for an item inside a database and returns:
+// An item (may be null case not found/not deprecated)
+// A bool that indicate if the field was deleted. False indicates it was deprecated
+// An error
+func (db APIGroups) CheckForItem(group, version, kind, resource string, itemlister ListerFunc) (*results.ResultItem, bool, error) {
+	apigroup, ok := db[group]
+	if !ok {
+		result, err := itemlister(group, version, resource, kind)
+		if err != nil {
+			return nil, false, err
+		}
+		if len(result.Items) == 0 {
+			return nil, false, nil
+		}
+		return &result, true, nil
 	}
 
-	log.Debugf("Iteracting through %d definitions", len(defs.Definitions))
-	for k, value := range defs.Definitions {
-		log.Debugf("Getting API values from %s", k)
-
-		if value.Description == "" || len(value.GroupVersionKind) == 0 {
-			continue
+	apikind, ok := apigroup[kind]
+	if !ok {
+		result, err := itemlister(group, version, resource, kind)
+		if err != nil {
+			return nil, false, err
 		}
-
-		// We need also non deprecated APIs for the APIWalk/deleted APIs
-		var deprecated bool
-		if strings.Contains(strings.ToLower(value.Description), "deprecated") {
-			log.Debugf("API Definition does not contains the word DEPRECATED in its description, skipping")
-			deprecated = true
+		if len(result.Items) == 0 {
+			return nil, false, nil
 		}
-
-		var name string
-		for _, gvk := range value.GroupVersionKind {
-			if gvk.Group != "" {
-				name = fmt.Sprintf("%s/%s/%s", gvk.Group, gvk.Version, gvk.Kind)
-			} else {
-				name = fmt.Sprintf("%s/%s", gvk.Version, gvk.Kind)
-			}
-
-			log.Debugf("Adding %s to map.", name)
-			kubeAPIs[name] = KubeAPI{
-				Description: value.Description,
-				Group:       gvk.Group,
-				Kind:        gvk.Kind,
-				Version:     gvk.Version,
-				Deprecated:  deprecated,
-			}
-		}
+		return &result, true, nil
 	}
-	return nil
+
+	apiversion, ok := apikind[version]
+	if !ok {
+		result, err := itemlister(group, version, resource, kind)
+		if err != nil {
+			return nil, false, err
+		}
+		if len(result.Items) == 0 {
+			return nil, false, nil
+		}
+		return &result, true, nil
+	}
+
+	if apiversion.Deprecated {
+		result, err := itemlister(group, version, resource, kind)
+		if err != nil {
+			return nil, false, err
+		}
+		result.Description = apiversion.Description
+		if len(result.Items) == 0 {
+			return nil, false, nil
+		}
+		return &result, false, nil
+	}
+
+	return nil, false, nil
 }

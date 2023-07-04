@@ -17,3 +17,12 @@ func ListObjects(items []unstructured.Unstructured) (deprecatedItems []Item) {
 
 	return deprecatedItems
 }
+
+func CreateItem(group, version, kind string, items []Item) ResultItem {
+	return ResultItem{
+		Group:   group,
+		Kind:    kind,
+		Version: version,
+		Items:   items,
+	}
+}
