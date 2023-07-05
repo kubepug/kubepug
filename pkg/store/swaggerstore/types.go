@@ -1,4 +1,4 @@
-package parser
+package swaggerstore
 
 const (
 	CoreAPI = "CORE"
