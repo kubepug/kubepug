@@ -2,8 +2,6 @@ package utils
 
 import (
 	"testing"
-
-	"github.com/rikatz/kubepug/pkg/parser"
 )
 
 func Test_ShouldParse(t *testing.T) {
@@ -15,9 +13,8 @@ func Test_ShouldParse(t *testing.T) {
 		want         bool
 	}{
 		{
-			name:  "core apis should not be ignored",
-			group: parser.CoreAPI,
-			want:  true,
+			name: "core apis should not be ignored",
+			want: true,
 		},
 		{
 			name:  "core apis should not be ignored",

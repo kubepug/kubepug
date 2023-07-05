@@ -2,13 +2,11 @@ package utils
 
 import (
 	"strings"
-
-	"github.com/rikatz/kubepug/pkg/parser"
 )
 
 func ShouldParse(group string, ignoregroup, includegroup []string) bool {
 	// Core groups should never be ignored
-	if group == "" || group == parser.CoreAPI || !strings.Contains(group, ".") {
+	if group == "" || !strings.Contains(group, ".") {
 		return true
 	}
 	// If there is an exact group to be ignored, ignore it.

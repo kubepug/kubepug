@@ -10,8 +10,9 @@ import (
 	"github.com/rikatz/kubepug/pkg/kubepug"
 	fileinput "github.com/rikatz/kubepug/pkg/kubepug/input/file"
 	k8sinput "github.com/rikatz/kubepug/pkg/kubepug/input/k8s"
+	"github.com/rikatz/kubepug/pkg/store"
+	"github.com/rikatz/kubepug/pkg/store/swaggerstore"
 
-	"github.com/rikatz/kubepug/pkg/parser"
 	"github.com/rikatz/kubepug/pkg/results"
 	"github.com/rikatz/kubepug/pkg/utils"
 )
@@ -52,24 +53,22 @@ func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
 		return &results.Result{}, err
 	}
 
-	log.Infof("Populating the Deprecated Kubernetes APIs Map")
-	kubernetesAPIs, err := parser.NewAPIGroupsFromSwaggerFile(swaggerfile)
+	// TODO: Expand to receive the storer instead of download the file directly
+	storer, err := swaggerstore.NewSwaggerStoreFromFile(swaggerfile)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debugf("Kubernetes APIs Populated: %#v", kubernetesAPIs)
-
-	result = k.getResults(kubernetesAPIs)
+	result = k.getResults(storer)
 
 	return result, nil
 }
 
-func (k *Kubepug) getResults(kubeapis parser.APIGroups) *results.Result {
+func (k *Kubepug) getResults(storer store.DefinitionStorer) *results.Result {
 	var inputMode kubepug.Deprecator
 	var err error
 	if k.Config.Input != "" {
-		inputMode, err = fileinput.NewFileInput(k.Config.Input, kubeapis)
+		inputMode, err = fileinput.NewFileInput(k.Config.Input, storer)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -93,7 +92,7 @@ func (k *Kubepug) getResults(kubeapis parser.APIGroups) *results.Result {
 		// TODO: Use a constructor
 		inputMode = &k8sinput.K8sInput{
 			K8sconfig:          k.Config.ConfigFlags,
-			Database:           kubeapis,
+			Store:              storer,
 			APIWalk:            k.Config.APIWalk,
 			Client:             client,
 			DiscoveryClient:    disco,
