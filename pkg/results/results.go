@@ -9,9 +9,9 @@ func ListObjects(items []unstructured.Unstructured) (deprecatedItems []Item) {
 		name := d.GetName()
 		namespace := d.GetNamespace()
 		if namespace != "" {
-			deprecatedItems = append(deprecatedItems, Item{Scope: "OBJECT", ObjectName: name, Namespace: namespace})
+			deprecatedItems = append(deprecatedItems, Item{Scope: namespacedObject, ObjectName: name, Namespace: namespace})
 		} else {
-			deprecatedItems = append(deprecatedItems, Item{Scope: "GLOBAL", ObjectName: name})
+			deprecatedItems = append(deprecatedItems, Item{Scope: clusterObject, ObjectName: name})
 		}
 	}
 

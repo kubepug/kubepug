@@ -1,6 +1,6 @@
 # Deprecations  AKA KubePug - Pre UpGrade (Checker)
-[![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/rikatz/kubepug/?ref=repository-badge)
-[![codebeat badge](https://codebeat.co/badges/6613fe8d-da81-42be-bb35-8094557a627d)](https://codebeat.co/projects/github-com-rikatz-kubepug-master)
+[![Build Status](https://github.com/rikatz/kubepug/actions/workflows/build.yml/badge.svg)](https://github.com/rikatz/kubepug/actions/workflows/build.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rikatz/kubepug)](https://goreportcard.com/report/github.com/rikatz/kubepug)
 
 
 ![Kubepug](assets/kubepug.png)
@@ -35,7 +35,6 @@ After that, the command can be used just as kubectl, but with the following flag
 $ kubepug --help
 [...]
 Flags:
-      --api-walk                 Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer. Defaults to true (default true)
       --cluster string           The name of the kubeconfig cluster to use
       --context string           The name of the kubeconfig context to use
       --description              DEPRECATED FLAG - Whether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true (default true)

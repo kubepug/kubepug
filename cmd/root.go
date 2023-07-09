@@ -26,7 +26,6 @@ var (
 
 	k8sVersion        string
 	forceDownload     bool
-	apiWalk           bool
 	errorOnDeprecated bool
 	errorOnDeleted    bool
 	swaggerDir        string
@@ -95,7 +94,6 @@ func runPug(_ *cobra.Command, _ []string) error {
 	config := lib.Config{
 		K8sVersion:      k8sVersion,
 		ForceDownload:   forceDownload,
-		APIWalk:         apiWalk,
 		SwaggerDir:      swaggerDir,
 		ShowDescription: showDescription,
 		ConfigFlags:     kubernetesConfigFlags,
@@ -155,7 +153,6 @@ func init() {
 	rootCmd.Flags().MarkHidden("token")                    //nolint: errcheck
 	rootCmd.Flags().MarkHidden("user")                     //nolint: errcheck
 
-	rootCmd.PersistentFlags().BoolVar(&apiWalk, "api-walk", true, "Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be I/O intensive to APIServer. Defaults to true")
 	rootCmd.PersistentFlags().BoolVar(&errorOnDeprecated, "error-on-deprecated", false, "If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false")
 	rootCmd.PersistentFlags().BoolVar(&errorOnDeleted, "error-on-deleted", false, "If a deleted object is found, the program will exit with return code 1 instead of 0. Defaults to false")
 	rootCmd.PersistentFlags().BoolVar(&showDescription, "description", true, "DEPRECATED FLAG - Whether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true")
