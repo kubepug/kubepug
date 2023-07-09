@@ -25,8 +25,6 @@ type Config struct {
 	K8sVersion string
 	// ForceDownload defines if the download should happen even if the swagger file already exists
 	ForceDownload bool
-	// APIWalk defines if the expensive operation of checking every object should happen
-	APIWalk bool
 	// SwaggerDir defines where the swagger file should be saved. If empty, a temporary directory will be created and used.
 	SwaggerDir string
 	// ShowDescription defines if the description of the API should be copied to the output result
@@ -93,7 +91,6 @@ func (k *Kubepug) getResults(storer store.DefinitionStorer) *results.Result {
 		inputMode = &k8sinput.K8sInput{
 			K8sconfig:          k.Config.ConfigFlags,
 			Store:              storer,
-			APIWalk:            k.Config.APIWalk,
 			Client:             client,
 			DiscoveryClient:    disco,
 			IncludePrefixGroup: []string{".k8s.io"},

@@ -22,7 +22,6 @@ import (
 type K8sInput struct {
 	K8sconfig *genericclioptions.ConfigFlags
 	Store     store.DefinitionStorer
-	APIWalk   bool
 
 	Client          dynamic.Interface
 	DiscoveryClient discovery.DiscoveryInterface

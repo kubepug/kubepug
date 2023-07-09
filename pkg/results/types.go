@@ -1,5 +1,10 @@
 package results
 
+const (
+	namespacedObject = "OBJECT"
+	clusterObject    = "GLOBAL"
+)
+
 // DeprecatedAPI definition of an API
 type DeprecatedAPI struct {
 	Description string `json,yaml:"description,omitempty"`
