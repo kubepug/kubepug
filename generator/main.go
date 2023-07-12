@@ -38,7 +38,7 @@ func main() {
 	genericArgs := args.Default().WithoutDefaultFlagParsing()
 
 	genericArgs.AddFlags(pflag.CommandLine)
-	flag.Set("logtostderr", "true")
+	flag.Set("logtostderr", "true") //nolint: errcheck
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
 

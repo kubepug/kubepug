@@ -6,6 +6,7 @@ on:
   schedule:
     # Data files are re-generated every 30 minutes
     - cron:  '30 * * * *'
+  workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:

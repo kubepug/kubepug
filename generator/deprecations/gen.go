@@ -77,15 +77,15 @@ func tagExists(tagName string, t *types.Type) bool {
 	return rawTag != nil
 }
 
-func extractKubeVersionTag(tagName string, t *types.Type) (*tagValue, int, int, error) {
+func extractKubeVersionTag(tagName string, t *types.Type) (value *tagValue, majorversion, minorversion int, err error) {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
 	rawTag := extractTag(tagName, comments)
-	if rawTag == nil || len(rawTag.value) == 0 {
+	if rawTag == nil || rawTag.value == "" {
 		return nil, -1, -1, fmt.Errorf("%v missing %v=Version tag", t, tagName)
 	}
 
 	splitValue := strings.Split(rawTag.value, ".")
-	if len(splitValue) != 2 || len(splitValue[0]) == 0 || len(splitValue[0]) == 0 {
+	if len(splitValue) != 2 || splitValue[0] == "" || splitValue[1] == "" {
 		return nil, -1, -1, fmt.Errorf("%v format must match %v=xx.yy tag", t, tagName)
 	}
 	major, err := strconv.ParseInt(splitValue[0], 10, 32)
@@ -100,15 +100,15 @@ func extractKubeVersionTag(tagName string, t *types.Type) (*tagValue, int, int, 
 	return rawTag, int(major), int(minor), nil
 }
 
-func extractIntroducedTag(t *types.Type) (*tagValue, int, int, error) {
+func extractIntroducedTag(t *types.Type) (value *tagValue, major, minor int, err error) {
 	return extractKubeVersionTag(introducedTagName, t)
 }
 
-func extractDeprecatedTag(t *types.Type) (*tagValue, int, int, error) {
+func extractDeprecatedTag(t *types.Type) (value *tagValue, major, minor int, err error) {
 	return extractKubeVersionTag(deprecatedTagName, t)
 }
 
-func extractRemovedTag(t *types.Type) (*tagValue, int, int, error) {
+func extractRemovedTag(t *types.Type) (value *tagValue, major, minor int, err error) {
 	return extractKubeVersionTag(removedTagName, t)
 }
 
@@ -122,7 +122,7 @@ func extractReplacementTag(t *types.Type) (group, version, kind string, hasRepla
 	}
 	// If there are multiple values, abort.
 	if len(tagVals) > 1 {
-		return "", "", "", false, fmt.Errorf("Found %d %s tags: %q", len(tagVals), replacementTagName, tagVals)
+		return "", "", "", false, fmt.Errorf("found %d %s tags: %q", len(tagVals), replacementTagName, tagVals)
 	}
 	tagValue := tagVals[0]
 	parts := strings.Split(tagValue, ",")
@@ -130,7 +130,7 @@ func extractReplacementTag(t *types.Type) (group, version, kind string, hasRepla
 		return "", "", "", false, fmt.Errorf(`%s value must be "<group>,<version>,<kind>", got %q`, replacementTagName, tagValue)
 	}
 	group, version, kind = parts[0], parts[1], parts[2]
-	if len(version) == 0 || len(kind) == 0 {
+	if version == "" || kind == "" {
 		return "", "", "", false, fmt.Errorf(`%s value must be "<group>,<version>,<kind>", got %q`, replacementTagName, tagValue)
 	}
 	// sanity check the group
@@ -168,24 +168,6 @@ func extractTag(tagName string, comments []string) *tagValue {
 		tag.value = parts[0]
 	}
 
-	// Parse extra arguments.
-	parts = parts[1:]
-	for i := range parts {
-		kv := strings.SplitN(parts[i], "=", 2)
-		k := kv[0]
-		//v := ""
-		//if len(kv) == 2 {
-		//	v = kv[1]
-		//}
-		switch k {
-		//case "register":
-		//	if v != "false" {
-		//		tag.register = true
-		//	}
-		default:
-			klog.Fatalf("Unsupported %s param: %q", tagName, parts[i])
-		}
-	}
 	return tag
 }
 
@@ -283,7 +265,7 @@ func (r *APIRegistry) Packages(context *generator.Context, arguments *args.Gener
 				&generator.DefaultPackage{
 					PackageName: strings.Split(filepath.Base(pkg.Path), ".")[0],
 					PackagePath: path,
-					//HeaderText:  header,
+					// HeaderText:  header,
 					GeneratorFunc: func(c *generator.Context) (generators []generator.Generator) {
 						return []generator.Generator{
 							r.NewDeprecatedDefinitionsGen(arguments.OutputFileBaseName, pkg.Path, apigroup, apiversion),
@@ -323,7 +305,7 @@ func (r *APIRegistry) NewDeprecatedDefinitionsGen(sanitizedName, targetPackage, 
 	}
 }
 
-func (g *genDeprecatedDefinitions) Namers(c *generator.Context) namer.NameSystems {
+func (g *genDeprecatedDefinitions) Namers(_ *generator.Context) namer.NameSystems {
 	return namer.NameSystems{
 		"public":       namer.NewPublicNamer(1),
 		"intrapackage": namer.NewPublicNamer(0),
@@ -331,7 +313,7 @@ func (g *genDeprecatedDefinitions) Namers(c *generator.Context) namer.NameSystem
 	}
 }
 
-func (g *genDeprecatedDefinitions) Filter(c *generator.Context, t *types.Type) bool {
+func (g *genDeprecatedDefinitions) Filter(_ *generator.Context, t *types.Type) bool {
 	// Filter out types not being processed or not copyable within the package.
 	if !isAPIType(t) {
 		klog.V(2).Infof("Type %v is not a valid target for status", t)
@@ -376,7 +358,7 @@ func (g *genDeprecatedDefinitions) isOtherPackage(pkg string) bool {
 	return true
 }
 
-func (g *genDeprecatedDefinitions) Imports(c *generator.Context) (imports []string) {
+func (g *genDeprecatedDefinitions) Imports(_ *generator.Context) (imports []string) {
 	importLines := []string{}
 	for _, singleImport := range g.imports.ImportLines() {
 		if g.isOtherPackage(singleImport) {
@@ -386,7 +368,7 @@ func (g *genDeprecatedDefinitions) Imports(c *generator.Context) (imports []stri
 	return importLines
 }
 
-func (g *genDeprecatedDefinitions) argsFromType(c *generator.Context, t *types.Type) (*APIDeprecation, error) {
+func (g *genDeprecatedDefinitions) argsFromType(_ *generator.Context, t *types.Type) (*APIDeprecation, error) {
 	_, introducedMajor, introducedMinor, err := extractIntroducedTag(t)
 	if err != nil {
 		return nil, err
@@ -445,11 +427,11 @@ func (g *genDeprecatedDefinitions) argsFromType(c *generator.Context, t *types.T
 	return &reg, nil
 }
 
-func (g *genDeprecatedDefinitions) Init(c *generator.Context, w io.Writer) error {
+func (g *genDeprecatedDefinitions) Init(_ *generator.Context, _ io.Writer) error {
 	return nil
 }
 
-func (g *genDeprecatedDefinitions) GenerateType(c *generator.Context, t *types.Type, w io.Writer) error {
+func (g *genDeprecatedDefinitions) GenerateType(c *generator.Context, t *types.Type, _ io.Writer) error {
 	klog.V(3).Infof("Generating deprecation definitions for type %v", t)
 
 	reg, err := g.argsFromType(c, t)
