@@ -2,7 +2,8 @@ name: Build and deploy deprecation page
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "main"
   schedule:
     # Data files are re-generated every 30 minutes
     - cron:  '30 * * * *'
@@ -13,7 +14,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -26,18 +26,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v4
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
+          check-latest: true
+
       - name: Build
         run: go build -o ./generator-bin -v generator/main.go
+
       - name: Download and generate files
-        run: mkdir tmp; cd tmp; GOPATH=$(pwd) go get k8s.io/api; GOPATH=$(pwd) ../generator-bin -i k8s.io/api/./... -v 9 > ../generator/html/src/data.json
+        run: |
+          mkdir -p tmp
+          cd tmp
+          GOPATH=$(pwd) go get k8s.io/api
+          GOPATH=$(pwd) ../generator-bin -i k8s.io/api/./... -v 9 > ../generator/html/src/data.json
+
       - name: Upload artifacts
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@a753861a5debcf57bf8b404356158c8e1e33150c # v2.0.0
         with:
           path: "generator/html/"
 
@@ -47,8 +53,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@12ab2b16cf43a7a061fe99da74b6f8f11fb77f5b # v2.0.3
