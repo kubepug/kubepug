@@ -15,6 +15,7 @@ import (
 	"github.com/rikatz/kubepug/pkg/utils"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -41,9 +42,44 @@ var deprecatedAPIReplacements = map[string]schema.GroupVersionResource{
 	},
 }
 
+var apisvcgvr = schema.GroupVersionResource{
+	Group:    "apiregistration.k8s.io",
+	Version:  "v1",
+	Resource: "apiservices",
+}
+
+func (f *K8sInput) IgnoreAPIService() error {
+	apisvcList, err := f.Client.Resource(apisvcgvr).List(context.TODO(), metav1.ListOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get apiservices: %w", err)
+	}
+
+	for _, d := range apisvcList.Items {
+		_, foundSvc, errSvc := unstructured.NestedString(d.Object, "spec", "service", "name")
+		// No services fields or group field found, move on!
+		if errSvc != nil || !foundSvc {
+			logrus.Infof("local service %s found, skipping", d.GetName())
+			continue
+		}
+
+		group, foundGrp, err := unstructured.NestedString(d.Object, "spec", "group")
+		// No services fields or group field found, move on!
+		if err != nil || !foundGrp {
+			logrus.Warningf("failed to parse the apiservice %s, this will be skipped and may generate inconsistency. err: %s", d.GetName(), err)
+			continue
+		}
+		f.IgnoreExactGroup = append(f.IgnoreExactGroup, group)
+	}
+	return nil
+}
+
 // GetDeprecated retrieves the map of FileItems and compares with Kubernetes swagger.json
 // returning the set of Deprecated results
 func (f *K8sInput) GetDeprecations() (deprecated, deleted []results.ResultItem, err error) {
+	if err := f.IgnoreAPIService(); err != nil {
+		return deprecated, deleted, err
+	}
+
 	apiresources, err := f.DiscoveryClient.ServerPreferredResources()
 	if err != nil {
 		if !discovery.IsGroupDiscoveryFailedError(err) {
