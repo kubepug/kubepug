@@ -62,7 +62,7 @@ func TestNewFormatterWithError(t *testing.T) {
 		{
 			name:          "plain is valid",
 			formattertype: "plain",
-			want:          &plain{},
+			want:          &stdout{plain: true},
 			wantErr:       false,
 		},
 		{

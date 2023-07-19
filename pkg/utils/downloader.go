@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	baseURL = "https://raw.githubusercontent.com/kubernetes/kubernetes"
-	fileURL = "api/openapi-spec/swagger.json"
+	baseURL       = "https://raw.githubusercontent.com/kubernetes/kubernetes"
+	fileURL       = "api/openapi-spec/swagger.json"
+	generatedJSON = "https://deprecations.k8s.church/src/data.json"
 )
 
 // From https://golangcode.com/download-a-file-from-a-url/ which was easier than create :P
@@ -39,6 +40,21 @@ func downloadFile(filename, url string) error {
 	_, err = io.Copy(out, resp.Body)
 
 	return err
+}
+
+func DownloadGeneratedJSON(urlpath string) (filename string, err error) {
+	tmpdir, err := os.MkdirTemp("", "kubepug")
+	if err != nil {
+		return "", err
+	}
+
+	filename = fmt.Sprintf("%s/data.json", tmpdir)
+	err = downloadFile(filename, urlpath)
+	if err != nil {
+		return "", err
+	}
+
+	return filename, nil
 }
 
 // DownloadSwaggerFile checks whether a swagger.json file needs to be downloaded,

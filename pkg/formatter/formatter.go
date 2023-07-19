@@ -15,7 +15,7 @@ type Formatter interface {
 func NewFormatter(t string) Formatter {
 	f, err := NewFormatterWithError(t)
 	if err != nil {
-		f = newSTDOUTFormatter()
+		f = newSTDOUTFormatter(false)
 	}
 	return f
 }
@@ -25,9 +25,9 @@ func NewFormatter(t string) Formatter {
 func NewFormatterWithError(t string) (Formatter, error) {
 	switch t {
 	case "stdout":
-		return newSTDOUTFormatter(), nil
+		return newSTDOUTFormatter(false), nil
 	case "plain":
-		return newPlainFormatter(), nil
+		return newSTDOUTFormatter(true), nil
 	case "json":
 		return newJSONFormatter(), nil
 	case "yaml":

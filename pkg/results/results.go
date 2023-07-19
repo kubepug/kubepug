@@ -1,6 +1,8 @@
 package results
 
-import "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+import (
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+)
 
 // ListObjects is a generic function that receives unstructured Kubernetes objects and
 // convert to deprecatedItem to be used later in the results

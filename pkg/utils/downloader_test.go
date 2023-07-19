@@ -8,7 +8,7 @@ import (
 
 func TestDownloadSwaggerFile(t *testing.T) {
 	var tmpdir string
-	// Github actions does not have a temporary dir :/
+	// Github actions does not have a temporary dir
 	tmpdir = os.Getenv("RUNNER_TEMP")
 	if tmpdir == "" {
 		tmpdir = "/tmp"

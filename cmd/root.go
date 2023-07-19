@@ -24,6 +24,7 @@ import (
 var (
 	kubernetesConfigFlags *genericclioptions.ConfigFlags
 
+	generatedStore    string
 	k8sVersion        string
 	forceDownload     bool
 	errorOnDeprecated bool
@@ -92,6 +93,7 @@ func Complete(_ *cobra.Command, _ []string) error {
 
 func runPug(_ *cobra.Command, _ []string) error {
 	config := lib.Config{
+		GeneratedStore:  generatedStore,
 		K8sVersion:      k8sVersion,
 		ForceDownload:   forceDownload,
 		SwaggerDir:      swaggerDir,
@@ -163,6 +165,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
 	rootCmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analysed. Use \"-\" to read from STDIN")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
+	rootCmd.PersistentFlags().StringVar(&generatedStore, "database", "", "Sets the generated database location. Can be remote file or local")
 	rootCmd.AddCommand(version.WithFont("starwars"))
 }
 

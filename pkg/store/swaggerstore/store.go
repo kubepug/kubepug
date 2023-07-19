@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
+	apis "github.com/rikatz/kubepug/pkg/apis/v1alpha1"
 	pugerrors "github.com/rikatz/kubepug/pkg/errors"
 
 	json "github.com/goccy/go-json"
@@ -14,7 +16,7 @@ import (
 )
 
 type SwaggerStore struct {
-	db APIGroups
+	db apis.APIGroups
 }
 
 func NewSwaggerStoreFromFile(swaggerfile string) (*SwaggerStore, error) {
@@ -38,14 +40,14 @@ func NewSwaggerStoreFromBytes(data []byte) (*SwaggerStore, error) {
 	}, nil
 }
 
-func newInternalDatabase(data []byte) (APIGroups, error) {
+func newInternalDatabase(data []byte) (apis.APIGroups, error) {
 	defs := &definitionsJSON{}
 	err := json.Unmarshal(data, defs)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing the JSON, file might be invalid: %v", err)
 	}
 
-	apigroup := make(APIGroups)
+	apigroup := make(apis.APIGroups)
 	for _, definition := range defs.Definitions {
 		var deprecated bool
 		if strings.Contains(strings.ToLower(definition.Description), "deprecated") {
@@ -54,43 +56,59 @@ func newInternalDatabase(data []byte) (APIGroups, error) {
 		}
 		for _, groups := range definition.GroupVersionKind {
 			if groups.Group == "" {
-				groups.Group = CoreAPI // Special type for Core APIs
+				groups.Group = apis.CoreAPI // Special type for Core APIs
 			}
 			if _, ok := apigroup[groups.Group]; !ok {
-				apigroup[groups.Group] = make(APIKinds)
+				apigroup[groups.Group] = make(apis.APIKinds)
 			}
 			if _, ok := apigroup[groups.Group][groups.Kind]; !ok {
-				apigroup[groups.Group][groups.Kind] = make(APIVersion)
+				apigroup[groups.Group][groups.Kind] = make(apis.APIVersion)
 			}
 
-			apigroup[groups.Group][groups.Kind][groups.Version] = APIVersionStatus{
-				Description: definition.Description,
-				Deprecated:  deprecated,
+			apigroup[groups.Group][groups.Kind][groups.Version] = apis.APIVersionStatus{
+				Description:        definition.Description,
+				DeprecationVersion: fmt.Sprintf("%t", deprecated),
 			}
 		}
 	}
 	return apigroup, nil
 }
 
-func (s *SwaggerStore) GetAPIDefinition(_ context.Context, group, version, kind string) (description string, deprecated bool, err error) {
+func (s *SwaggerStore) GetAPIDefinition(_ context.Context, group, version, kind string) (result apis.APIVersionStatus, err error) {
+
+	result = apis.APIVersionStatus{}
+
 	if group == "" {
-		group = CoreAPI
+		group = apis.CoreAPI
 	}
 
 	apigroup, ok := s.db[group]
 	if !ok {
-		return "", false, pugerrors.ErrAPINotFound
+		return apis.APIVersionStatus{
+			DeletedVersion: internalStatusVersion,
+		}, pugerrors.ErrAPINotFound
 	}
 
 	apikind, ok := apigroup[kind]
 	if !ok {
-		return "", false, pugerrors.ErrAPINotFound
+		return apis.APIVersionStatus{
+			DeletedVersion: internalStatusVersion,
+		}, pugerrors.ErrAPINotFound
 	}
 
 	apiversion, ok := apikind[version]
 	if !ok {
-		return "", false, pugerrors.ErrAPINotFound
+		return apis.APIVersionStatus{
+			DeletedVersion: internalStatusVersion,
+		}, pugerrors.ErrAPINotFound
 	}
 
-	return apiversion.Description, apiversion.Deprecated, nil
+	deprecatedAPI, err := strconv.ParseBool(apiversion.DeprecationVersion)
+	if err != nil || deprecatedAPI {
+		result.DeprecationVersion = internalStatusVersion
+	}
+
+	result.Description = apiversion.Description
+
+	return result, nil
 }

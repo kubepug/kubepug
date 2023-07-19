@@ -127,16 +127,14 @@ func (f *K8sInput) getResourceDeprecation(resources *metav1.APIResourceList) (de
 			continue
 		}
 
-		var isdeleted bool
-		description, isdeprecated, err := f.Store.GetAPIDefinition(context.Background(), gv.Group, gv.Version, resources.APIResources[i].Kind)
+		apiResult, err := f.Store.GetAPIDefinition(context.Background(), gv.Group, gv.Version, resources.APIResources[i].Kind)
 		if err != nil {
 			if !errors.IsErrAPINotFound(err) {
 				return deprecated, deleted, err
 			}
-			isdeleted = true
 		}
 
-		if !isdeprecated && !isdeleted {
+		if apiResult.DeprecationVersion == "" && apiResult.DeletedVersion == "" {
 			continue
 		}
 
@@ -150,8 +148,14 @@ func (f *K8sInput) getResourceDeprecation(resources *metav1.APIResourceList) (de
 		}
 
 		result := results.CreateItem(gv.Group, gv.Version, resources.APIResources[i].Kind, items)
-		result.Description = description
-		if isdeleted {
+		result.Description = apiResult.Description
+		if apiResult.Replacement != nil {
+			result.Replacement = apiResult.Replacement
+		}
+
+		result.K8sVersion = apiResult.DeprecationVersion
+		if apiResult.DeletedVersion != "" {
+			result.K8sVersion = apiResult.DeletedVersion
 			deleted = append(deleted, result)
 			continue
 		}
