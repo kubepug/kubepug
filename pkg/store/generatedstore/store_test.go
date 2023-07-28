@@ -223,12 +223,12 @@ func TestNewStoreFromHTTP(t *testing.T) {
 			if r.URL.Path == "/data.json" {
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(mockValidData))
+				w.Write([]byte(mockValidData)) //nolint: errcheck
 			}
 			if r.URL.Path == "/datainvalid.json" {
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(mockInvalidData))
+				w.Write([]byte(mockInvalidData)) //nolint: errcheck
 			}
 			if r.URL.Path == "/notfound.json" {
 				w.WriteHeader(http.StatusNotFound)
@@ -274,11 +274,9 @@ func TestNewStoreFromHTTP(t *testing.T) {
 			&apis.GroupVersionKind{Group: "admission.k8s.io", Version: "v1", Kind: "AdmissionReview"},
 			v.db["admission.k8s.io"]["AdmissionReview"]["v1beta1"].Replacement)
 	})
-
 }
 
 func TestNewStoreFromFile(t *testing.T) {
-
 	t.Run("with no file path should return an error", func(t *testing.T) {
 		_, err := NewGeneratedStore(StoreConfig{Path: ""})
 		require.Error(t, err)
@@ -349,7 +347,6 @@ func TestNewStoreFromFile(t *testing.T) {
 		require.Equal(t, "", results.IntroducedVersion)
 		require.Equal(t,
 			"", results.Description)
-
 	})
 }
 
@@ -444,12 +441,10 @@ func TestNewStoreFromBytes(t *testing.T) {
 		require.Equal(t, "", results.IntroducedVersion)
 		require.Equal(t,
 			"", results.Description)
-
 	})
 }
 
 func TestGeneratedStore_compareAndFill(t *testing.T) {
-
 	tests := []struct {
 		name             string
 		apiVersion       string

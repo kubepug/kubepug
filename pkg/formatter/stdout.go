@@ -30,7 +30,6 @@ var (
 )
 
 func (f *stdout) Output(data results.Result) ([]byte, error) {
-
 	color.NoColor = f.plain
 
 	var s string
@@ -49,7 +48,7 @@ func (f *stdout) Output(data results.Result) ([]byte, error) {
 			}
 
 			if api.Description != "" {
-				s = fmt.Sprintf("%s\t ├─ %s\n", s, strings.Replace(api.Description, "\n", "", -1))
+				s = fmt.Sprintf("%s\t ├─ %s\n", s, strings.ReplaceAll(api.Description, "\n", ""))
 			}
 
 			items := stdoutListItems(api.Items)
@@ -73,7 +72,7 @@ func (f *stdout) Output(data results.Result) ([]byte, error) {
 			}
 
 			if api.Description != "" {
-				s = fmt.Sprintf("%s\t ├─ %s\n", s, strings.Replace(api.Description, "\n", "", -1))
+				s = fmt.Sprintf("%s\t ├─ %s\n", s, strings.ReplaceAll(api.Description, "\n", ""))
 			}
 
 			items := stdoutListItems(api.Items)
@@ -82,7 +81,7 @@ func (f *stdout) Output(data results.Result) ([]byte, error) {
 	}
 
 	if f.plain {
-		s = strings.Replace(s, "\t", "", -1)
+		s = strings.ReplaceAll(s, "\t", "")
 	}
 
 	return []byte(s), nil

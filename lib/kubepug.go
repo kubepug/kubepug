@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/discovery"
@@ -31,26 +33,26 @@ type Config struct {
 	// ForceDownload defines if the download should happen even if the swagger file already exists
 	ForceDownload bool
 	// SwaggerDir defines where the swagger file should be saved. If empty, a temporary directory will be created and used.
-	SwaggerDir string
-	// ShowDescription defines if the description of the API should be copied to the output result
-	ShowDescription bool
-	Input           string
-	ConfigFlags     *genericclioptions.ConfigFlags
+	SwaggerDir  string
+	Input       string
+	ConfigFlags *genericclioptions.ConfigFlags
 }
 
 // Kubepug defines a kubepug instance to be used
 type Kubepug struct {
-	Config Config
+	Config *Config
 }
 
 // NewKubepug returns a new kubepug library
-func NewKubepug(config Config) *Kubepug {
-	return &Kubepug{Config: config}
+func NewKubepug(config *Config) (*Kubepug, error) {
+	if config == nil {
+		return nil, fmt.Errorf("config cannot be null")
+	}
+	return &Kubepug{Config: config}, nil
 }
 
 // GetDeprecated returns the list of deprecated APIs
 func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
-
 	var storer store.DefinitionStorer
 
 	if k.Config.GeneratedStore != "" {
@@ -71,7 +73,7 @@ func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
 	return result, nil
 }
 
-func (k *Kubepug) storeFromSwagger() (store *swaggerstore.SwaggerStore, err error) {
+func (k *Kubepug) storeFromSwagger() (pugstore *swaggerstore.SwaggerStore, err error) {
 	log.Infof("Downloading the swagger.json file")
 	swaggerfile, err := utils.DownloadSwaggerFile(k.Config.K8sVersion, k.Config.SwaggerDir, k.Config.ForceDownload)
 	if err != nil {

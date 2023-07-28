@@ -59,7 +59,6 @@ func NewGeneratedStore(config StoreConfig) (*GeneratedStore, error) {
 // NewGeneratedStoreFromBytes allows setting a reader as a database. It should contain
 // a valid Kubernetes swagger definition
 func NewGeneratedStoreFromBytes(data []byte, config StoreConfig) (*GeneratedStore, error) {
-
 	var parsedVersion *semver.Version
 	var err error
 
@@ -89,34 +88,33 @@ func newInternalDatabase(data []byte) (apis.APIGroups, error) {
 	}
 
 	apigroup := make(apis.APIGroups)
-	for _, definition := range defs {
-		group := definition.Group
+	for k := range defs {
+		group := defs[k].Group
 		if group == "" {
 			group = apis.CoreAPI // Special type for Core APIs
 		}
 		if _, ok := apigroup[group]; !ok {
 			apigroup[group] = make(apis.APIKinds)
 		}
-		if _, ok := apigroup[group][definition.Kind]; !ok {
-			apigroup[group][definition.Kind] = make(apis.APIVersion)
+		if _, ok := apigroup[group][defs[k].Kind]; !ok {
+			apigroup[group][defs[k].Kind] = make(apis.APIVersion)
 		}
 
 		status := apis.APIVersionStatus{
-			Description:        definition.Description,
-			IntroducedVersion:  generateVersion(definition.IntroducedVersion.VersionMajor, definition.IntroducedVersion.VersionMinor),
-			DeprecationVersion: generateVersion(definition.DeprecatedVersion.VersionMajor, definition.DeprecatedVersion.VersionMinor),
-			DeletedVersion:     generateVersion(definition.RemovedVersion.VersionMajor, definition.RemovedVersion.VersionMinor),
+			Description:        defs[k].Description,
+			IntroducedVersion:  generateVersion(defs[k].IntroducedVersion.VersionMajor, defs[k].IntroducedVersion.VersionMinor),
+			DeprecationVersion: generateVersion(defs[k].DeprecatedVersion.VersionMajor, defs[k].DeprecatedVersion.VersionMinor),
+			DeletedVersion:     generateVersion(defs[k].RemovedVersion.VersionMajor, defs[k].RemovedVersion.VersionMinor),
 		}
-		if definition.Replacement.Version != "" && definition.Replacement.Kind != "" {
+		if defs[k].Replacement.Version != "" && defs[k].Replacement.Kind != "" {
 			status.Replacement = &apis.GroupVersionKind{
-				Group:   definition.Replacement.Group,
-				Version: definition.Replacement.Version,
-				Kind:    definition.Replacement.Kind,
+				Group:   defs[k].Replacement.Group,
+				Version: defs[k].Replacement.Version,
+				Kind:    defs[k].Replacement.Kind,
 			}
 		}
 
-		apigroup[group][definition.Kind][definition.Version] = status
-
+		apigroup[group][defs[k].Kind][defs[k].Version] = status
 	}
 	return apigroup, nil
 }

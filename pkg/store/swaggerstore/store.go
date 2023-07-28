@@ -75,7 +75,6 @@ func newInternalDatabase(data []byte) (apis.APIGroups, error) {
 }
 
 func (s *SwaggerStore) GetAPIDefinition(_ context.Context, group, version, kind string) (result apis.APIVersionStatus, err error) {
-
 	result = apis.APIVersionStatus{}
 
 	if group == "" {
