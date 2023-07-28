@@ -24,13 +24,27 @@ jobs:
         run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: go mod download
+        run: |
+          go mod download
+          sudo apt-get install -y lcov
 
       - name: Ensure go.mod is already tidied
         run: go mod tidy && git diff --no-patch --exit-code
 
       - name: Run Unit Tests
         run: make test
+      
+      - name: Convert coverage to lcov
+        uses: jandelgado/gcov2lcov-action@c680c0f7c7442485f1749eb2a13e54a686e76eb5 # v1.0.9
+        with:
+          version: v1.0.5
+
+      - name: Report code coverage
+        uses: zgosalvez/github-actions-report-lcov@73c068acfc6a265af813132fbca7ef8738a1f52f # v3.1.8
+        with:
+          coverage-files: coverage.lcov
+          artifact-name: code-coverage-report
+          update-comment: true
 
       - name: Verify building
         run: make build

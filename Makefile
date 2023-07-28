@@ -11,7 +11,7 @@ build:
 
 .PHONY: test
 test:
-	go test ./...
+	go test ./... -coverprofile coverage.out
 
 .PHONY: ko
 ko:

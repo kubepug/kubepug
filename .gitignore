@@ -19,3 +19,5 @@ dist/*
 .vscode/
 test/testdata/swagger/*
 kubepugImagerefs
+/coverage.out
+/coverage.lcov
