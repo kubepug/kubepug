@@ -24,12 +24,12 @@ import (
 var (
 	kubernetesConfigFlags *genericclioptions.ConfigFlags
 
+	generatedStore    string
 	k8sVersion        string
 	forceDownload     bool
 	errorOnDeprecated bool
 	errorOnDeleted    bool
 	swaggerDir        string
-	showDescription   bool
 	format            string
 	filename          string
 	inputFile         string
@@ -92,16 +92,19 @@ func Complete(_ *cobra.Command, _ []string) error {
 
 func runPug(_ *cobra.Command, _ []string) error {
 	config := lib.Config{
-		K8sVersion:      k8sVersion,
-		ForceDownload:   forceDownload,
-		SwaggerDir:      swaggerDir,
-		ShowDescription: showDescription,
-		ConfigFlags:     kubernetesConfigFlags,
-		Input:           inputFile,
+		GeneratedStore: generatedStore,
+		K8sVersion:     k8sVersion,
+		ForceDownload:  forceDownload,
+		SwaggerDir:     swaggerDir,
+		ConfigFlags:    kubernetesConfigFlags,
+		Input:          inputFile,
 	}
 
 	logrus.Debugf("Starting Kubepug with configs: %+v", config)
-	kubepug := lib.NewKubepug(config)
+	kubepug, err := lib.NewKubepug(&config)
+	if err != nil {
+		return err
+	}
 
 	result, err := kubepug.GetDeprecated()
 	if err != nil {
@@ -155,7 +158,6 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVar(&errorOnDeprecated, "error-on-deprecated", false, "If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false")
 	rootCmd.PersistentFlags().BoolVar(&errorOnDeleted, "error-on-deleted", false, "If a deleted object is found, the program will exit with return code 1 instead of 0. Defaults to false")
-	rootCmd.PersistentFlags().BoolVar(&showDescription, "description", true, "DEPRECATED FLAG - Whether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true")
 	rootCmd.PersistentFlags().StringVar(&k8sVersion, "k8s-version", "master", "Which Kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
 	rootCmd.PersistentFlags().StringVar(&swaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
 	rootCmd.PersistentFlags().BoolVar(&forceDownload, "force-download", false, "Whether to force the download of a new swagger.json file even if one exists. Defaults to false")
@@ -163,7 +165,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
 	rootCmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analysed. Use \"-\" to read from STDIN")
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
+	rootCmd.PersistentFlags().StringVar(&generatedStore, "database", "https://kubepug.xyz/data/data.json", "Sets the generated database location. Can be remote file or local")
 	rootCmd.AddCommand(version.WithFont("starwars"))
+
+	rootCmd.PersistentFlags().MarkDeprecated("swagger-dir", "flag is deprecated and will be removed on next version. database flag should be used instead") //nolint: errcheck
+	rootCmd.PersistentFlags().MarkDeprecated("force-download", "flag is deprecated and will be removed on next version")                                    //nolint: errcheck
 }
 
 func Execute() {

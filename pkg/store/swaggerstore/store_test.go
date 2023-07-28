@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	apis "github.com/rikatz/kubepug/pkg/apis/v1alpha1"
+
 	"github.com/rikatz/kubepug/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -123,15 +125,15 @@ func TestPopulateStruct(t *testing.T) {
 		v, err := newInternalDatabase([]byte(mockcontentvalid))
 		require.NoError(t, err)
 
-		require.True(t, v["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].Deprecated)
+		require.Equal(t, v["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].DeprecationVersion, "true")
 		require.Equal(t,
 			"MutatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject and may change the object. Deprecated in favor of v1",
 			v["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].Description)
-		require.False(t, v["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1"].Deprecated)
+		require.Equal(t, v["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1"].DeprecationVersion, "false")
 
 		require.Equal(t,
 			"Namespace provides a scope for Names. Use of multiple namespaces is optional.",
-			v[CoreAPI]["Namespace"]["v1"].Description)
+			v[apis.CoreAPI]["Namespace"]["v1"].Description)
 	})
 }
 
@@ -148,15 +150,15 @@ func TestNewSwaggerStoreFromFile(t *testing.T) {
 		require.NoError(t, err)
 		v, err := NewSwaggerStoreFromFile(tmp + "/testfile")
 		require.NoError(t, err)
-		require.True(t, v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].Deprecated)
+		require.Equal(t, v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].DeprecationVersion, "true")
 		require.Equal(t,
 			"MutatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject and may change the object. Deprecated in favor of v1",
 			v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].Description)
-		require.False(t, v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1"].Deprecated)
+		require.Equal(t, v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1"].DeprecationVersion, "false")
 
 		require.Equal(t,
 			"Namespace provides a scope for Names. Use of multiple namespaces is optional.",
-			v.db[CoreAPI]["Namespace"]["v1"].Description)
+			v.db[apis.CoreAPI]["Namespace"]["v1"].Description)
 	})
 }
 
@@ -169,46 +171,48 @@ func TestNewSwaggerStoreFromBytes(t *testing.T) {
 	t.Run("with valid bytes should be able to parse it", func(t *testing.T) {
 		v, err := NewSwaggerStoreFromBytes([]byte(mockcontentvalid))
 		require.NoError(t, err)
-		require.True(t, v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].Deprecated)
+		require.Equal(t, v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].DeprecationVersion, "true")
 		require.Equal(t,
 			"MutatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject and may change the object. Deprecated in favor of v1",
 			v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1beta1"].Description)
-		require.False(t, v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1"].Deprecated)
+		require.Equal(t, v.db["admissionregistration.k8s.io"]["MutatingWebhookConfiguration"]["v1"].DeprecationVersion, "false")
 
 		require.Equal(t,
 			"Namespace provides a scope for Names. Use of multiple namespaces is optional.",
-			v.db[CoreAPI]["Namespace"]["v1"].Description)
+			v.db[apis.CoreAPI]["Namespace"]["v1"].Description)
 
-		description, deprecated, err := v.GetAPIDefinition(context.TODO(), "admissionregistration.k8s.io", "v1beta1", "MutatingWebhookConfiguration")
+		results, err := v.GetAPIDefinition(context.TODO(), "admissionregistration.k8s.io", "v1beta1", "MutatingWebhookConfiguration")
 		require.NoError(t, err)
-		require.True(t, deprecated)
+		require.Equal(t, internalStatusVersion, results.DeprecationVersion)
 		require.Equal(t,
 			"MutatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject and may change the object. Deprecated in favor of v1",
-			description)
+			results.Description)
 
-		description, deprecated, err = v.GetAPIDefinition(context.TODO(), "admissionregistration.k8s.io", "v1beta1", "MutatingWebhookConfigurationAAA")
+		results, err = v.GetAPIDefinition(context.TODO(), "admissionregistration.k8s.io", "v1beta1", "MutatingWebhookConfigurationAAA")
 		require.ErrorIs(t, err, errors.ErrAPINotFound)
-		require.False(t, deprecated)
-		require.Equal(t, "", description)
+		require.Equal(t, internalStatusVersion, results.DeletedVersion)
+		require.Equal(t, "", results.Description)
 
-		description, deprecated, err = v.GetAPIDefinition(context.TODO(), "admissionregistration1.k8s.io", "v1beta1", "MutatingWebhookConfiguration")
+		results, err = v.GetAPIDefinition(context.TODO(), "admissionregistration1.k8s.io", "v1beta1", "MutatingWebhookConfiguration")
 		require.ErrorIs(t, err, errors.ErrAPINotFound)
-		require.False(t, deprecated)
-		require.Equal(t, "", description)
+		require.Equal(t, internalStatusVersion, results.DeletedVersion)
+		require.Equal(t, "", results.Description)
 
-		description, deprecated, err = v.GetAPIDefinition(context.TODO(), "admissionregistration.k8s.io", "v1alpha1", "MutatingWebhookConfiguration")
+		results, err = v.GetAPIDefinition(context.TODO(), "admissionregistration.k8s.io", "v1alpha1", "MutatingWebhookConfiguration")
 		require.ErrorIs(t, err, errors.ErrAPINotFound)
-		require.False(t, deprecated)
-		require.Equal(t, "", description)
+		require.Equal(t, internalStatusVersion, results.DeletedVersion)
+		require.Equal(t, "", results.Description)
 
-		description, deprecated, err = v.GetAPIDefinition(context.TODO(), "admissionregistration.k8s.io", "v1", "MutatingWebhookConfiguration")
+		results, err = v.GetAPIDefinition(context.TODO(), "admissionregistration.k8s.io", "v1", "MutatingWebhookConfiguration")
 		require.NoError(t, err)
-		require.False(t, deprecated)
-		require.Equal(t, "MutatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject and may change the object.", description)
+		require.Equal(t, "", results.DeletedVersion)
+		require.Equal(t, "", results.DeprecationVersion)
+		require.Equal(t, "MutatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject and may change the object.", results.Description)
 
-		description, deprecated, err = v.GetAPIDefinition(context.TODO(), "", "v1", "Pod")
+		results, err = v.GetAPIDefinition(context.TODO(), "", "v1", "Pod")
 		require.NoError(t, err)
-		require.False(t, deprecated)
-		require.Equal(t, "Pod is a collection of containers that can run on a host. This resource is created by clients and scheduled onto hosts.", description)
+		require.Equal(t, "", results.DeletedVersion)
+		require.Equal(t, "", results.DeprecationVersion)
+		require.Equal(t, "Pod is a collection of containers that can run on a host. This resource is created by clients and scheduled onto hosts.", results.Description)
 	})
 }

@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/fatih/color"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -9,10 +10,14 @@ import (
 	"github.com/rikatz/kubepug/pkg/results"
 )
 
-type stdout struct{}
+type stdout struct {
+	plain bool
+}
 
-func newSTDOUTFormatter() Formatter {
-	return &stdout{}
+func newSTDOUTFormatter(plain bool) Formatter {
+	return &stdout{
+		plain: plain,
+	}
 }
 
 var (
@@ -25,27 +30,58 @@ var (
 )
 
 func (f *stdout) Output(data results.Result) ([]byte, error) {
-	s := fmt.Sprintf("%s:\n%s:\n\n", resourceColor("RESULTS"), resourceColor("Deprecated APIs"))
+	color.NoColor = f.plain
 
-	for _, api := range data.DeprecatedAPIs {
-		s = fmt.Sprintf("%s%s found in %s/%s\n", s, resourceColor(api.Kind), gvColor(api.Group), gvColor(api.Version))
+	var s string
+	if len(data.DeprecatedAPIs) > 0 {
+		s = fmt.Sprintf("%s:\n%s:\n", resourceColor("RESULTS"), resourceColor("Deprecated APIs"))
 
-		if api.Description != "" {
-			s = fmt.Sprintf("%s\t ├─ %s\n", s, api.Description)
+		for _, api := range data.DeprecatedAPIs {
+			s = fmt.Sprintf("%s%s found in %s/%s\n", s, resourceColor(api.Kind), gvColor(api.Group), gvColor(api.Version))
+
+			if api.K8sVersion != "" && api.K8sVersion != "unknown" {
+				s = fmt.Sprintf("%s\t ├─ %s %s\n", s, namespaceColor("Deprecated at:"), api.K8sVersion)
+			}
+
+			if api.Replacement != nil {
+				s = fmt.Sprintf("%s\t ├─ %s %s/%s/%s \n", s, namespaceColor("Replacement:"), api.Replacement.Group, api.Replacement.Version, api.Replacement.Kind)
+			}
+
+			if api.Description != "" {
+				s = fmt.Sprintf("%s\t ├─ %s\n", s, strings.ReplaceAll(api.Description, "\n", ""))
+			}
+
+			items := stdoutListItems(api.Items)
+			s = fmt.Sprintf("%s%s\n", s, items)
 		}
-
-		items := stdoutListItems(api.Items)
-		s = fmt.Sprintf("%s%s\n", s, items)
 	}
 
-	s = fmt.Sprintf("%s\n%s:\n\n", s, resourceColor("Deleted APIs"))
+	if len(data.DeletedAPIs) > 0 {
+		s = fmt.Sprintf("%s\n%s:\n", s, resourceColor("Deleted APIs"))
+		s = fmt.Sprintf("%s\t %s\n", s, errorColor("APIs REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!"))
 
-	for _, api := range data.DeletedAPIs {
-		s = fmt.Sprintf("%s%s found in %s/%s\n", s, resourceColor(api.Kind), gvColor(api.Group), gvColor(api.Version))
-		s = fmt.Sprintf("%s\t ├─ %s\n", s, errorColor("API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!"))
+		for _, api := range data.DeletedAPIs {
+			s = fmt.Sprintf("%s%s found in %s/%s\n", s, resourceColor(api.Kind), gvColor(api.Group), gvColor(api.Version))
 
-		items := stdoutListItems(api.Items)
-		s = fmt.Sprintf("%s%s\n", s, items)
+			if api.K8sVersion != "" && api.K8sVersion != "unknown" {
+				s = fmt.Sprintf("%s\t ├─ %s %s\n", s, namespaceColor("Deleted at:"), api.K8sVersion)
+			}
+
+			if api.Replacement != nil {
+				s = fmt.Sprintf("%s\t ├─ %s %s/%s/%s \n", s, namespaceColor("Replacement:"), api.Replacement.Group, api.Replacement.Version, api.Replacement.Kind)
+			}
+
+			if api.Description != "" {
+				s = fmt.Sprintf("%s\t ├─ %s\n", s, strings.ReplaceAll(api.Description, "\n", ""))
+			}
+
+			items := stdoutListItems(api.Items)
+			s = fmt.Sprintf("%s%s\n", s, items)
+		}
+	}
+
+	if f.plain {
+		s = strings.ReplaceAll(s, "\t", "")
 	}
 
 	return []byte(s), nil

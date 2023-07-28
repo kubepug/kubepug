@@ -63,22 +63,28 @@ func (f *FileInput) GetDeprecations() (deprecated, deleted []results.ResultItem,
 			continue
 		}
 
-		var isdeleted bool
-		description, isdeprecated, err := f.Store.GetAPIDefinition(context.Background(), group, version, kind)
+		apiDef, err := f.Store.GetAPIDefinition(context.Background(), group, version, kind)
 		if err != nil {
 			if !errors.IsErrAPINotFound(err) {
 				return deprecated, deleted, err
 			}
-			isdeleted = true
 		}
 
-		if !isdeprecated && !isdeleted {
+		if apiDef.DeletedVersion == "" && apiDef.DeprecationVersion == "" {
 			continue
 		}
 
 		result := results.CreateItem(group, version, kind, item)
-		result.Description = description
-		if isdeleted {
+		result.Description = apiDef.Description
+
+		if apiDef.Replacement != nil {
+			result.Replacement = apiDef.Replacement
+		}
+
+		result.K8sVersion = apiDef.DeprecationVersion
+
+		if apiDef.DeletedVersion != "" {
+			result.K8sVersion = apiDef.DeletedVersion
 			deleted = append(deleted, result)
 			continue
 		}
