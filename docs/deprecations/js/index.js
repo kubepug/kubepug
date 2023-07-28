@@ -53,7 +53,7 @@ new gridjs.Grid({
   fixedHeader: true,
   search: true,
   server: {
-    url: '/src/data.json',
+    url: '/data/data.json',
     then: data => data,
   }
 }).render(document.getElementById("wrapper"));

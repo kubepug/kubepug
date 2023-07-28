@@ -40,12 +40,12 @@ jobs:
           mkdir -p tmp
           cd tmp
           GOPATH=$(pwd) go get k8s.io/api
-          GOPATH=$(pwd) ../generator-bin -i k8s.io/api/./... -v 9 > ../generator/html/src/data.json
+          GOPATH=$(pwd) ../generator-bin -i k8s.io/api/./... -v 9 > ../docs/data/data.json
 
       - name: Upload artifacts
         uses: actions/upload-pages-artifact@a753861a5debcf57bf8b404356158c8e1e33150c # v2.0.0
         with:
-          path: "generator/html/"
+          path: "docs/"
 
   # Deployment job
   deploy:
