@@ -94,8 +94,6 @@ func runPug(_ *cobra.Command, _ []string) error {
 	config := lib.Config{
 		GeneratedStore: generatedStore,
 		K8sVersion:     k8sVersion,
-		ForceDownload:  forceDownload,
-		SwaggerDir:     swaggerDir,
 		ConfigFlags:    kubernetesConfigFlags,
 		Input:          inputFile,
 	}
@@ -169,7 +167,7 @@ func init() {
 	rootCmd.AddCommand(version.WithFont("starwars"))
 
 	rootCmd.PersistentFlags().MarkDeprecated("swagger-dir", "flag is deprecated and will be removed on next version. database flag should be used instead") //nolint: errcheck
-	rootCmd.PersistentFlags().MarkDeprecated("force-download", "flag is deprecated and will be removed on next version")                                    //nolint: errcheck
+	rootCmd.PersistentFlags().MarkDeprecated("force-download", "flag is deprecated and will be removed on next version. This flag is no-op.")               //nolint: errcheck
 }
 
 func Execute() {
