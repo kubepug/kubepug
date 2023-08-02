@@ -17,3 +17,16 @@ On a working directory (and after building the generator):
 GOPATH=$(pwd) go get k8s.io/api
 GOPATH=$(pwd) generator -i k8s.io/api/./... > results.json
 ```
+
+## Generating your own data
+The Dockerfile on this directory can be used to generate your own data:
+
+```
+docker build -t generator .
+docker run generator > data.json
+```
+
+The generated data can then be passed to Kubepug via argument:
+```
+kubepug --database=/your/location/of/data.json ....
+```

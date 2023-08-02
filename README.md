@@ -8,9 +8,15 @@
 
 KubePug/Deprecations is intended to be a kubectl plugin, which:
 
-* Downloads a swagger.json from a specific Kubernetes version
-* Parses this Json finding deprecation notices
-* Verifies the current kubernetes cluster or input files checking whether exists objects in this deprecated API Versions, allowing the user to check before migrating
+* Downloads a data.json generated containing Kubernetes APIs deprecation information
+* Verifies the current Kubernetes cluster or input files checking whether exists objects in this deprecated API Versions, allowing the user to check before migrating
+
+## Features
+* Can run against a Kubernetes cluster, using kubeconfig or the current cluster
+* Can run against a different set of manifest/files
+* Allows specifying the target Kubernetes version to be validated
+* Provides the replacement API that should be used
+* Informs the version that the API was deprecated or deleted, based on the target cluster version
 
 ## How to use it as a krew plugin
 
@@ -59,34 +65,22 @@ Flags:
 You can check the status of a running cluster with the following command.
 
 ```console
-$ kubepug --k8s-version=v1.18.6 # Will verify the current context against v1.18.6 swagger.json
+$ kubepug --k8s-version=v1.22 # Will verify the current context against v1.22 version
 [...]
 RESULTS:
 Deprecated APIs:
-
-Ingress found in extensions/v1beta1
-         ├─ Ingress is a collection of rules that allow inbound connections to reach the endpoints defined by a backend. An Ingress can be configured to give services externally-reachable urls, load balance traffic, terminate SSL, offer name based virtual hosting etc. DEPRECATED - This group version of Ingress is deprecated by networking.k8s.io/v1beta1 Ingress. See the release notes for more information.
-                -> OBJECT: nginxnok namespace: default
-                -> OBJECT: nginxok namespace: default
-
+PodSecurityPolicy found in policy/v1beta1
+	 ├─ Deprecated at: 1.21
+	 ├─ PodSecurityPolicy governs the ability to make requests that affect the Security Contextthat will be applied to a pod and container.Deprecated in 1.21.
+		-> OBJECT: restrictive namespace: default
 
 Deleted APIs:
-
-DaemonSet found in extensions/v1beta1
-         ├─ API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!
-                -> OBJECT: kindnet namespace: kube-system
-                -> OBJECT: kube-proxy namespace: kube-system
-
-Deployment found in extensions/v1beta1
-         ├─ API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!
-                -> OBJECT: coredns namespace: kube-system
-                -> OBJECT: local-path-provisioner namespace: local-path-storage
-
-ReplicaSet found in extensions/v1beta1
-         ├─ API REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!
-                -> OBJECT: coredns-6dcc67dcbc namespace: kube-system
-                -> OBJECT: local-path-provisioner-56fcf95c58 namespace: local-path-storage
-
+	 APIs REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!
+Ingress found in extensions/v1beta1
+	 ├─ Deleted at: 1.22
+	 ├─ Replacement: networking.k8s.io/v1/Ingress
+	 ├─ Ingress is a collection of rules that allow inbound connections to reach theendpoints defined by a backend. An Ingress can be configured to give servicesexternally-reachable urls, load balance traffic, terminate SSL, offer namebased virtual hosting etc.DEPRECATED - This group version of Ingress is deprecated by networking.k8s.io/v1beta1 Ingress. See the release notes for more information.
+		-> OBJECT: bla namespace: blabla
 ```
 
 ### Putting Kubepug in your CI / Checking input files
@@ -102,25 +96,46 @@ With the command above
 * All YAML files (excluding subdirectories) will be verified
 * The program will exit with an error if deprecated or deleted objects are found.
 
-
 ### Air-gapped environment
 
 This happens when you have a secure environment that does not have an internet connectivity.
 
-Steps to follow:
+The data.json file is generated every hour, based on the latest stable version of Kubernetes API. 
+You can download it from `https://kubepug.xyz/data/data.json` and move it to a safe location.
 
-1. Download swagger file in a machine that has internet connection
+Then run kubepug pointing to the location of this file:
 
 ```console
-$ curl -o swagger-v1.17.0.json https://raw.githubusercontent.com/kubernetes/kubernetes/v1.17.0/api/openapi-spec/swagger.json
+kubepug --k8s-version=v1.22 --database=location/of/your/data.json
 ```
 
-2. Securely move the json file to your Air-Gapped environment, to the folder of your choosing. This folder will be used by `kubepug`.
+### Building your own data.json file
 
-3. Execute `kubepug` with the option `swagger-dir`, like this
+Steps to follow:
+
+1. Clone/Download this repository, and build the container on `generator/` directory
 
 ```console
-$ kubepug --k8s-version=v1.17.0 --swagger-dir=/your/swagger/folder
+git clone https://github.com/rikatz/kubepug
+docker build -t generator -f generator/Dockerfile generator
+```
+
+2. Generate the data.json
+```console
+docker run generator > data.json
+```
+
+Generator uses the latest stable Kubernetes API version, if you want the latest dev version you should run as:
+```
+docker run -e VERSION=master generator > data.json
+```
+
+3. Securely move the json file to your Air-Gapped environment, to the folder of your choosing. This folder will be used by `kubepug`.
+
+4. Execute `kubepug` with the option `swagger-dir`, like this
+
+```console
+kubepug --k8s-version=v1.22 --database=location/of/your/data.json
 ```
 
 This will verify the current context against the swagger file we downloaded and copied over manually
