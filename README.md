@@ -1,6 +1,7 @@
 # Deprecations  AKA KubePug - Pre UpGrade (Checker)
 [![Build Status](https://github.com/rikatz/kubepug/actions/workflows/build.yml/badge.svg)](https://github.com/rikatz/kubepug/actions/workflows/build.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rikatz/kubepug)](https://goreportcard.com/report/github.com/rikatz/kubepug)
+[![kubepug](https://snapcraft.io/kubepug/badge.svg)](https://snapcraft.io/kubepug)
 
 
 ![Kubepug](assets/kubepug.png)
