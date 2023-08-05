@@ -73,7 +73,7 @@ func (f *K8sInput) IgnoreAPIService() error {
 	return nil
 }
 
-// GetDeprecated retrieves the map of FileItems and compares with Kubernetes swagger.json
+// GetDeprecated retrieves the map of FileItems and compares with Kubepug store,
 // returning the set of Deprecated results
 func (f *K8sInput) GetDeprecations() (deprecated, deleted []results.ResultItem, err error) {
 	if err := f.IgnoreAPIService(); err != nil {

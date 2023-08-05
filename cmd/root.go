@@ -40,7 +40,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:          filepath.Base(os.Args[0]),
 		SilenceUsage: true,
-		Short:        "Shows all the deprecated objects in a Kubernetes cluster allowing the operator to verify them before upgrading the cluster.\nIt uses the swagger.json version available in master branch of Kubernetes repository (github.com/kubernetes/kubernetes) as a reference.",
+		Short:        "Shows all the deprecated objects in a Kubernetes cluster allowing the operator to verify them before upgrading the cluster.\nIt uses the Kubernetes API source code markers to define deprecated and deleted versions.",
 		Example:      filepath.Base(os.Args[0]),
 		Args:         cobra.MinimumNArgs(0),
 		PreRunE:      Complete,
@@ -59,13 +59,6 @@ func Complete(_ *cobra.Command, _ []string) error {
 
 	if k8sVersion != "master" && k8sVersion != "main" && !semver.IsValid(k8sVersion) {
 		errComplete = errors.Join(errComplete, fmt.Errorf("invalid Kubernetes version, should be 'master' or a valid semantic version"))
-	}
-
-	if swaggerDir != "" {
-		dir, err := os.Stat(swaggerDir)
-		if os.IsNotExist(err) || !dir.IsDir() {
-			errComplete = errors.Join(errComplete, fmt.Errorf("directory %s does not exist or is already created as a file", swaggerDir))
-		}
 	}
 
 	outputFormatter, err = formatter.NewFormatterWithError(format)
