@@ -57,7 +57,7 @@ func NewGeneratedStore(config StoreConfig) (*GeneratedStore, error) {
 }
 
 // NewGeneratedStoreFromBytes allows setting a reader as a database. It should contain
-// a valid Kubernetes swagger definition
+// a valid Kubernetes generated data definition
 func NewGeneratedStoreFromBytes(data []byte, config StoreConfig) (*GeneratedStore, error) {
 	var parsedVersion *semver.Version
 	var err error

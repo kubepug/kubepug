@@ -39,7 +39,7 @@ func NewFileInput(location string, storer store.DefinitionStorer) (fileInput *Fi
 	return fileInput, nil
 }
 
-// GetDeprecations retrieves the map of FileItems and compares with Kubernetes swagger.json
+// GetDeprecations retrieves the map of FileItems and compares with Kubepug store
 // returning the set of Deprecated results
 func (f *FileInput) GetDeprecations() (deprecated, deleted []results.ResultItem, err error) {
 	for key, item := range f.FileItems {
