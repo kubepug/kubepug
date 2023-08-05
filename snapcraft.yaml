@@ -8,6 +8,11 @@ grade: stable
 confinement: strict
 adopt-info: kubepug
 
+architectures:
+- amd64
+- arm64
+- armhf
+
 apps:
   kubepug:
     command: bin/kubepug
