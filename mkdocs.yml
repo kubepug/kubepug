@@ -1,0 +1,52 @@
+site_name: Kubepug - Kubernetes PreUpgrade API Deprecation checker
+site_url: "https://kubepug.xyz"
+repo_url: "https://github.com/rikatz/kubepug"
+plugins:
+  - search
+extra:
+  social:
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/rpkatz
+    - icon: fontawesome/brands/mastodon
+      link: https://fosstodon.org/@rkatz
+markdown_extensions:
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+nav:
+- Welcome: index.md
+- Install: install.md
+- Usage: usage.md
+- API Database: database.md
+theme:
+  name: material
+  features:
+  - navigation.tabs
+  - navigation.tabs.sticky
+  - toc.integrate
+  - navigation.top
+  - search.highlight
+  - search.suggest
+  logo: assets/kubepug.png
+  palette:
+  - scheme: default
+    media: "(prefers-color-scheme: light)"
+    toggle:
+      icon: material/brightness-7 
+      name: Switch to dark mode
+    primary: indigo
+    accent: deep orange
+
+  - scheme: slate
+    media: "(prefers-color-scheme: dark)"
+    toggle:
+      icon: material/brightness-4
+      name: Switch to light mode
+    primary: indigo
+    accent: deep orange
+
