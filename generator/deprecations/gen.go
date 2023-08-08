@@ -66,20 +66,26 @@ type tagValue struct {
 	value string
 }
 
-func extractEnabledTypeTag(t *types.Type) *tagValue {
+func extractEnabledTypeTag(t *types.Type) (*tagValue, error) {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
 	return extractTag(tagEnabledName, comments)
 }
 
-func tagExists(tagName string, t *types.Type) bool {
+func tagExists(tagName string, t *types.Type) (bool, error) {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
-	rawTag := extractTag(tagName, comments)
-	return rawTag != nil
+	rawTag, err := extractTag(tagName, comments)
+	if err != nil {
+		return false, err
+	}
+	return rawTag != nil, nil
 }
 
 func extractKubeVersionTag(tagName string, t *types.Type) (value *tagValue, majorversion, minorversion int, err error) {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
-	rawTag := extractTag(tagName, comments)
+	rawTag, err := extractTag(tagName, comments)
+	if err != nil {
+		return nil, -1, -1, err
+	}
 	if rawTag == nil || rawTag.value == "" {
 		return nil, -1, -1, fmt.Errorf("%v missing %v=Version tag", t, tagName)
 	}
@@ -148,15 +154,15 @@ func extractReplacementTag(t *types.Type) (group, version, kind string, hasRepla
 	return group, version, kind, true, nil
 }
 
-func extractTag(tagName string, comments []string) *tagValue {
+func extractTag(tagName string, comments []string) (*tagValue, error) {
 	tagVals := types.ExtractCommentTags("+", comments)[tagName]
 	if tagVals == nil {
 		// No match for the tag.
-		return nil
+		return nil, nil
 	}
 	// If there are multiple values, abort.
 	if len(tagVals) > 1 {
-		klog.Fatalf("Found %d %s tags: %q", len(tagVals), tagName, tagVals)
+		return nil, fmt.Errorf("found %d %s tags: %q", len(tagVals), tagName, tagVals)
 	}
 
 	// If we got here we are returning something.
@@ -168,7 +174,7 @@ func extractTag(tagName string, comments []string) *tagValue {
 		tag.value = parts[0]
 	}
 
-	return tag
+	return tag, nil
 }
 
 // NameSystems returns the name system used by the generators in this package.
@@ -187,7 +193,6 @@ func DefaultNameSystem() string {
 
 // Packages makes the package definition.
 func (r *APIRegistry) Packages(context *generator.Context, arguments *args.GeneratorArgs) generator.Packages {
-	var err error
 	inputs := sets.NewString(context.Inputs...)
 	packages := generator.Packages{}
 
@@ -199,7 +204,10 @@ func (r *APIRegistry) Packages(context *generator.Context, arguments *args.Gener
 			continue
 		}
 
-		ptag := extractTag(tagEnabledName, pkg.Comments)
+		ptag, err := extractTag(tagEnabledName, pkg.Comments)
+		if err != nil {
+			klog.Fatalf("%w", err)
+		}
 		pkgNeedsGeneration := false
 		if ptag != nil {
 			pkgNeedsGeneration, err = strconv.ParseBool(ptag.value)
@@ -219,7 +227,10 @@ func (r *APIRegistry) Packages(context *generator.Context, arguments *args.Gener
 			// explicitly wants generation.
 			for _, t := range pkg.Types {
 				klog.V(5).Infof("  considering type %q", t.Name.String())
-				ttag := extractEnabledTypeTag(t)
+				ttag, err := extractEnabledTypeTag(t)
+				if err != nil {
+					klog.Fatalf("%w", err)
+				}
 				if ttag != nil && ttag.value == "true" {
 					klog.V(5).Infof("    tag=true")
 					if !isAPIType(t) {
@@ -378,7 +389,11 @@ func (g *genDeprecatedDefinitions) argsFromType(_ *generator.Context, t *types.T
 	deprecatedMajor := introducedMajor
 	deprecatedMinor := introducedMinor + 3
 	// if someone intentionally override the deprecation release
-	if tagExists(deprecatedTagName, t) {
+	exists, err := tagExists(deprecatedTagName, t)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
 		_, deprecatedMajor, deprecatedMinor, err = extractDeprecatedTag(t)
 		if err != nil {
 			return nil, err
@@ -389,7 +404,11 @@ func (g *genDeprecatedDefinitions) argsFromType(_ *generator.Context, t *types.T
 	removedMajor := deprecatedMajor
 	removedMinor := deprecatedMinor + 3
 	// if someone intentionally override the removed release
-	if tagExists(removedTagName, t) {
+	exists, err = tagExists(removedTagName, t)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
 		_, removedMajor, removedMinor, err = extractRemovedTag(t)
 		if err != nil {
 			return nil, err

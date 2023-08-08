@@ -8,6 +8,8 @@ import (
 
 	"github.com/rikatz/kubepug/pkg/store/mock"
 	"github.com/stretchr/testify/require"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/utils/pointer"
 )
 
 func TestNewKubepug(t *testing.T) {
@@ -144,6 +146,23 @@ func TestGetDeprecated(t *testing.T) {
 		result, err := pug.GetDeprecated()
 		require.Error(t, err)
 		require.ErrorContains(t, err, "k8s config cannot be null when k8s is being used")
+		require.Nil(t, result)
+	})
+
+	t.Run("bad k8s config should fail", func(t *testing.T) {
+		pug := &Kubepug{
+			Config: &Config{
+				GeneratedStore: ts.URL + "/data.json",
+				K8sVersion:     "v1.22",
+				ConfigFlags: &genericclioptions.ConfigFlags{
+					KubeConfig: pointer.String("/blabla123/kconfig"),
+				},
+			},
+		}
+
+		result, err := pug.GetDeprecated()
+		require.Error(t, err)
+		require.ErrorContains(t, err, "failed to create the K8s config parameters while listing Deprecated objects: stat /blabla123/kconfig: no such file or directory")
 		require.Nil(t, result)
 	})
 }
