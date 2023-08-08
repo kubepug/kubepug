@@ -1,31 +1,26 @@
 package kubepug
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/rikatz/kubepug/pkg/results"
+	mock "github.com/rikatz/kubepug/pkg/store/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetDeprecations(t *testing.T) {
-	tests := []struct {
-		name       string
-		d          Deprecator
-		wantResult results.Result
-		wantErr    bool
-	}{
-		// TODO: Implement Mock deprecations and add tests.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := GetDeprecations(tt.d)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetDeprecations() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(gotResult, tt.wantResult) {
-				t.Errorf("GetDeprecations() = %v, want %v", gotResult, tt.wantResult)
-			}
-		})
-	}
+	t.Run("should return an error", func(t *testing.T) {
+		store := mock.NewMockStore(true, true)
+		result, err := GetDeprecations(store)
+		require.Error(t, err)
+		require.Empty(t, result.DeletedAPIs)
+		require.Empty(t, result.DeprecatedAPIs)
+	})
+
+	t.Run("should return correctly", func(t *testing.T) {
+		store := mock.NewMockStore(true, false)
+		result, err := GetDeprecations(store)
+		require.NoError(t, err)
+		require.Equal(t, mock.DeletedMock, result.DeletedAPIs)
+		require.Equal(t, mock.DeprecatedMock, result.DeprecatedAPIs)
+	})
 }

@@ -9,139 +9,8 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	apis "github.com/rikatz/kubepug/pkg/apis/v1alpha1"
+	"github.com/rikatz/kubepug/pkg/store/mock"
 	"github.com/stretchr/testify/require"
-)
-
-var (
-	mockValidData = `
-	[
-    {
-        "group": "extensions",
-        "version": "v1beta1",
-        "kind": "DaemonSet",
-        "description": "DEPRECATED - This group version of DaemonSet is deprecated by apps/v1beta2/DaemonSet. See the release notes for\nmore information.\nDaemonSet represents the configuration of a daemon set.",
-        "introduced_version": {
-            "version_major": 1,
-            "version_minor": 1
-        },
-        "deprecated_version": {
-            "version_major": 1,
-            "version_minor": 8
-        },
-        "removed_version": {
-            "version_major": 1,
-            "version_minor": 16
-        },
-        "replacement": {
-            "group": "apps",
-            "version": "v1",
-            "kind": "DaemonSet"
-        }
-    },
-	{
-        "group": "",
-        "version": "v1",
-        "kind": "BlahPod",
-        "description": "BlahPod is a deprecated Pod.",
-        "introduced_version": {
-            "version_major": 1,
-            "version_minor": 1
-        },
-        "deprecated_version": {
-            "version_major": 1,
-            "version_minor": 8
-        },
-        "removed_version": {
-            "version_major": 1,
-            "version_minor": 16
-        },
-        "replacement": {
-            "group": "",
-            "version": "v1",
-            "kind": "Pod"
-        }
-    },
-    {
-        "group": "discovery.k8s.io",
-        "version": "v1beta1",
-        "kind": "EndpointSliceList",
-        "description": "EndpointSliceList represents a list of endpoint slices",
-        "introduced_version": {
-            "version_major": 1,
-            "version_minor": 16
-        },
-        "deprecated_version": {
-            "version_major": 1,
-            "version_minor": 21
-        },
-        "removed_version": {
-            "version_major": 1,
-            "version_minor": 25
-        },
-        "replacement": {
-            "group": "discovery.k8s.io",
-            "version": "v1",
-            "kind": "EndpointSlice"
-        }
-    },
-    {
-        "group": "admission.k8s.io",
-        "version": "v1beta1",
-        "kind": "AdmissionReview",
-        "description": "AdmissionReview describes an admission review request/response.",
-        "introduced_version": {
-            "version_major": 1,
-            "version_minor": 9
-        },
-        "deprecated_version": {
-            "version_major": 1,
-            "version_minor": 19
-        },
-        "removed_version": {
-            "version_major": 1,
-            "version_minor": 22
-        },
-        "replacement": {
-            "group": "admission.k8s.io",
-            "version": "v1",
-            "kind": "AdmissionReview"
-        }
-    }
-]`
-
-	mockInvalidData = `
-[
-    {
-        "group": "extensions",
-        "version": "v1beta1",
-        "kind": "DaemonSet",
-        "description": "DEPRECATED - This group version of DaemonSet is deprecated by apps/v1beta2/DaemonSet. See the release notes for\nmore information.\nDaemonSet represents the configuration of a daemon set.",
-        "introduced_version": {
-            "version_major": 1,
-            "version_minor": 1
-        },
-        "replacement": {
-            "group": "apps",
-            "version": "v1",
-            "kind": "DaemonSet"
-        `
-	mockNoVersions = `
-[
-    {
-        "group": "extensions",
-        "version": "v1beta1",
-        "kind": "DaemonSet",
-        "description": "DEPRECATED - This group version of DaemonSet is deprecated by apps/v1beta2/DaemonSet. See the release notes for\nmore information.\nDaemonSet represents the configuration of a daemon set.",
-        "deprecated_version": {
-            "version_major": 0,
-            "version_minor": 5
-        },
-        "removed_version": {
-            "version_major": 7,
-            "version_minor": 0
-        }
-    }
-]`
 )
 
 func Test_generateVersion(t *testing.T) {
@@ -181,12 +50,12 @@ func Test_generateVersion(t *testing.T) {
 
 func TestPopulateStruct(t *testing.T) {
 	t.Run("with invalid json file", func(t *testing.T) {
-		_, err := newInternalDatabase([]byte(mockInvalidData))
+		_, err := newInternalDatabase([]byte(mock.MockInvalidData))
 		require.Error(t, err)
 	})
 
 	t.Run("with valid json file", func(t *testing.T) {
-		v, err := newInternalDatabase([]byte(mockValidData))
+		v, err := newInternalDatabase([]byte(mock.MockValidData))
 		require.NoError(t, err)
 
 		require.Equal(t, v["extensions"]["DaemonSet"]["v1beta1"].DeprecationVersion, "1.8")
@@ -203,7 +72,7 @@ func TestPopulateStruct(t *testing.T) {
 	})
 
 	t.Run("without versions and replacements json file", func(t *testing.T) {
-		v, err := newInternalDatabase([]byte(mockNoVersions))
+		v, err := newInternalDatabase([]byte(mock.MockNoVersions))
 		require.NoError(t, err)
 
 		require.Equal(t, v["extensions"]["DaemonSet"]["v1beta1"].DeprecationVersion, "")
@@ -223,12 +92,12 @@ func TestNewStoreFromHTTP(t *testing.T) {
 			if r.URL.Path == "/data.json" {
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(mockValidData)) //nolint: errcheck
+				w.Write([]byte(mock.MockValidData)) //nolint: errcheck
 			}
 			if r.URL.Path == "/datainvalid.json" {
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(mockInvalidData)) //nolint: errcheck
+				w.Write([]byte(mock.MockInvalidData)) //nolint: errcheck
 			}
 			if r.URL.Path == "/notfound.json" {
 				w.WriteHeader(http.StatusNotFound)
@@ -289,7 +158,7 @@ func TestNewStoreFromFile(t *testing.T) {
 	t.Run("with valid path should be able to parse it", func(t *testing.T) {
 		tmp, err := os.MkdirTemp("", "")
 		require.NoError(t, err)
-		err = os.WriteFile(tmp+"/testfile", []byte(mockValidData), 0o600)
+		err = os.WriteFile(tmp+"/testfile", []byte(mock.MockValidData), 0o600)
 		require.NoError(t, err)
 		v, err := NewGeneratedStore(StoreConfig{Path: tmp + "/testfile", MinVersion: "v1.20"})
 		require.NoError(t, err)
@@ -352,17 +221,17 @@ func TestNewStoreFromFile(t *testing.T) {
 
 func TestNewStoreFromBytes(t *testing.T) {
 	t.Run("with invalid bytes should return an error", func(t *testing.T) {
-		_, err := NewGeneratedStoreFromBytes([]byte(mockInvalidData), StoreConfig{})
+		_, err := NewGeneratedStoreFromBytes([]byte(mock.MockInvalidData), StoreConfig{})
 		require.Error(t, err)
 	})
 
 	t.Run("with invalid version should return an error", func(t *testing.T) {
-		_, err := NewGeneratedStoreFromBytes([]byte(mockValidData), StoreConfig{MinVersion: "xxxx"})
+		_, err := NewGeneratedStoreFromBytes([]byte(mock.MockValidData), StoreConfig{MinVersion: "xxxx"})
 		require.Error(t, err)
 	})
 
 	t.Run("with valid bytes should be able to parse it", func(t *testing.T) {
-		v, err := NewGeneratedStoreFromBytes([]byte(mockValidData), StoreConfig{})
+		v, err := NewGeneratedStoreFromBytes([]byte(mock.MockValidData), StoreConfig{})
 		require.NoError(t, err)
 		require.Equal(t, v.db["extensions"]["DaemonSet"]["v1beta1"].DeprecationVersion, "1.8")
 		require.Equal(t, v.db["extensions"]["DaemonSet"]["v1beta1"].DeletedVersion, "1.16")
