@@ -3,6 +3,11 @@ site_url: "https://kubepug.xyz"
 repo_url: "https://github.com/rikatz/kubepug"
 plugins:
   - search
+extra_css:
+  - https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator_midnight.min.css
+extra_javascript:
+  - https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js
+  - javascripts/tables.js
 extra:
   social:
     - icon: fontawesome/brands/twitter
@@ -23,6 +28,7 @@ nav:
 - Install: install.md
 - Usage: usage.md
 - API Database: database.md
+- Status: status.md
 theme:
   name: material
   features:
