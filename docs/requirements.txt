@@ -1,4 +1,3 @@
-gpg==1.21.0
 mdutils==1.6.0
 PyYAML==6.0.1
 mkdocs-material==9.*
