@@ -21,3 +21,4 @@ test/testdata/swagger/*
 kubepugImagerefs
 /coverage.out
 /coverage.lcov
+docs/data/data.json

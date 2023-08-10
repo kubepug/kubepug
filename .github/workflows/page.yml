@@ -52,7 +52,8 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material
+      - run: pip install -r docs/requirements.txt
+      - run: python docs/generate_table_md.py
       - run: mkdocs build
 
       - name: Upload artifacts
