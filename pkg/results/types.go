@@ -28,6 +28,6 @@ type ResultItem struct {
 
 // Result to show final user
 type Result struct {
-	DeprecatedAPIs []ResultItem `json:"deprecated_apis,omitempty" yaml:"deprecated_apis,omitempty"`
-	DeletedAPIs    []ResultItem `json:"deleted_apis,omitempty" yaml:"deleted_apis,omitempty"`
+	DeprecatedAPIs []ResultItem `json:"deprecated_apis" yaml:"deprecated_apis"`
+	DeletedAPIs    []ResultItem `json:"deleted_apis" yaml:"deleted_apis"`
 }
