@@ -10,6 +10,10 @@ import (
 	"github.com/rikatz/kubepug/pkg/results"
 )
 
+const (
+	footer = "Kubepug validates the APIs using Kubernetes markers. To know what are the deprecated and deleted APIS it checks, please go to https://kubepug.xyz/status/"
+)
+
 type stdout struct {
 	plain bool
 }
@@ -79,6 +83,12 @@ func (f *stdout) Output(data results.Result) ([]byte, error) {
 			s = fmt.Sprintf("%s%s\n", s, items)
 		}
 	}
+
+	if len(data.DeletedAPIs) == 0 && len(data.DeprecatedAPIs) == 0 {
+		s = "\nNo deprecated or deleted APIs found"
+	}
+
+	s = fmt.Sprintf("%s\n\n%s", s, footer)
 
 	if f.plain {
 		s = strings.ReplaceAll(s, "\t", "")
