@@ -56,6 +56,10 @@ Flags:
       --tls-server-name string   Server name to use for server certificate validation. If it is not provided, the hostname used to contact the server is used
   -v, --verbosity string         Log level: debug, info, warn, error, fatal, panic (default "warning")
 ```
+#### Alternatively you can install using go install
+```
+$ go install github.com/rikatz/kubepug@latest
+```
 
 ### Checking a Kubernetes Cluster
 
