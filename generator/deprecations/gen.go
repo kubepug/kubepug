@@ -36,7 +36,7 @@ import (
 // This is the comment tag that carries parameters for API status generation.  Because the cadence is fixed, we can predict
 // with near certainty when this lifecycle happens as the API is introduced.
 const (
-	tagEnabledName    = "k8s:prerelease-lifecycle-gen"
+	tagEnabledName    = "k8s:prerelease-lifecycle-gen" //nolint: gosec
 	introducedTagName = tagEnabledName + ":introduced"
 	deprecatedTagName = tagEnabledName + ":deprecated"
 	removedTagName    = tagEnabledName + ":removed"
