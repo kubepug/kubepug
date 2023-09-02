@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.20'
+          go-version: '1.21'
           check-latest: true
 
       - name: Build
@@ -27,11 +27,11 @@ jobs:
           cd tmp
           GOPATH=$(pwd) go get k8s.io/api
           GOPATH=$(pwd) ../generator-bin -i k8s.io/api/./... -v 9 > ../docs/data/data.json
-      
+
       - uses: actions/setup-python@v4
         with:
           python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
       - uses: actions/cache@v3
         with:
           key: mkdocs-material-${{ env.cache_id }}
@@ -50,7 +50,7 @@ jobs:
 
       - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: "1.20"
+          go-version: "1.21"
           check-latest: true
 
       - name: Add GOPATH/bin to PATH
@@ -66,7 +66,7 @@ jobs:
 
       - name: Run Unit Tests
         run: make test
-      
+
       - name: Convert coverage to lcov
         uses: jandelgado/gcov2lcov-action@c680c0f7c7442485f1749eb2a13e54a686e76eb5 # v1.0.9
         with:
