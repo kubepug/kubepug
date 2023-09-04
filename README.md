@@ -57,6 +57,11 @@ Flags:
   -v, --verbosity string         Log level: debug, info, warn, error, fatal, panic (default "warning")
 ```
 
+#### Alternatively you can install using go install
+```
+$ go install github.com/rikatz/kubepug@latest
+```
+
 ### Checking a Kubernetes Cluster
 
 You can check the status of a running cluster with the following command.
