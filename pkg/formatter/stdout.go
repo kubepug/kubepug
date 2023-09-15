@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	footer = "Kubepug validates the APIs using Kubernetes markers. To know what are the deprecated and deleted APIS it checks, please go to https://kubepug.xyz/status/"
+	footer = "Kubepug validates the APIs using Kubernetes markers. To know what are the deprecated and deleted APIS it checks, please go to https://kubepug.xyz/status/ \n"
 )
 
 type stdout struct {
