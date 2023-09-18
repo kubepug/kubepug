@@ -88,7 +88,7 @@ func (f *stdout) Output(data results.Result) ([]byte, error) {
 		s = "\nNo deprecated or deleted APIs found"
 	}
 
-	s = fmt.Sprintf("%s\n\n%s", s, footer)
+	s = fmt.Sprintf("%s\n\n%s\n", s, footer)
 
 	if f.plain {
 		s = strings.ReplaceAll(s, "\t", "")
