@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	footer = "Kubepug validates the APIs using Kubernetes markers. To know what are the deprecated and deleted APIS it checks, please go to https://kubepug.xyz/status/ \n"
+	footer = "Kubepug validates the APIs using Kubernetes markers. To know what are the deprecated and deleted APIS it checks, please go to https://kubepug.xyz/status/"
 )
 
 type stdout struct {
@@ -88,7 +88,7 @@ func (f *stdout) Output(data results.Result) ([]byte, error) {
 		s = "\nNo deprecated or deleted APIs found"
 	}
 
-	s = fmt.Sprintf("%s\n\n%s", s, footer)
+	s = fmt.Sprintf("%s\n\n%s\n", s, footer)
 
 	if f.plain {
 		s = strings.ReplaceAll(s, "\t", "")
