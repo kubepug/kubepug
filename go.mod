@@ -13,7 +13,7 @@ require (
 	golang.org/x/mod v0.12.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.28.2
-	k8s.io/cli-runtime v0.28.1
+	k8s.io/cli-runtime v0.28.2
 	k8s.io/client-go v0.28.2
 	k8s.io/gengo v0.0.0-20210813121822-485abfe95c7c
 	k8s.io/klog/v2 v2.100.1
