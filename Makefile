@@ -3,7 +3,7 @@ GIT_HASH ?= $(shell git rev-parse HEAD)
 
 PKG=sigs.k8s.io/release-utils/version
 LDFLAGS=-X $(PKG).gitVersion=$(GIT_VERSION)
-KO_PREFIX ?= ghcr.io/rikatz
+KO_PREFIX ?= ghcr.io/kubepug
 
 .PHONY: build
 build:
