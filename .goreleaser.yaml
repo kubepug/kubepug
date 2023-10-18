@@ -73,5 +73,5 @@ changelog:
 
 release:
   github:
-    owner: rikatz
+    owner: kubepug
     name: kubepug
