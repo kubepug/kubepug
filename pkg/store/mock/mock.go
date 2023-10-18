@@ -3,8 +3,8 @@ package mock
 import (
 	"fmt"
 
-	"github.com/rikatz/kubepug/pkg/apis/v1alpha1"
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/apis/v1alpha1"
+	"github.com/kubepug/kubepug/pkg/results"
 )
 
 var (

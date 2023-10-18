@@ -1,4 +1,4 @@
-module github.com/rikatz/kubepug
+module github.com/kubepug/kubepug
 
 go 1.21
 

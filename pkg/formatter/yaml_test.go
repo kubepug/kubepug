@@ -6,7 +6,7 @@ import (
 
 	yamlencoder "gopkg.in/yaml.v3"
 
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/results"
 )
 
 func Test_yaml_Output(t *testing.T) {

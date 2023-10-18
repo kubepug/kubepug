@@ -1,6 +1,6 @@
 package results
 
-import "github.com/rikatz/kubepug/pkg/apis/v1alpha1"
+import "github.com/kubepug/kubepug/pkg/apis/v1alpha1"
 
 const (
 	namespacedObject = "OBJECT"

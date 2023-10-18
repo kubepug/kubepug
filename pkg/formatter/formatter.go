@@ -3,7 +3,7 @@ package formatter
 import (
 	"fmt"
 
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/results"
 )
 
 // Formatter defines the behavior for a Formatter

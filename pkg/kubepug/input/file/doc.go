@@ -2,4 +2,4 @@
 // from an Input File
 package fileinput
 
-// import "github.com/rikatz/kubepug/pkg/kubepug/input/file"
+// import "github.com/kubepug/kubepug/pkg/kubepug/input/file"

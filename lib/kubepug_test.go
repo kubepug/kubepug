@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rikatz/kubepug/pkg/store/mock"
+	"github.com/kubepug/kubepug/pkg/store/mock"
 	"github.com/stretchr/testify/require"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/utils/pointer"

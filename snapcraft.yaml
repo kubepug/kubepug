@@ -23,7 +23,7 @@ parts:
   kubepug:
     plugin: go
     source-type: git
-    source: https://github.com/rikatz/kubepug
+    source: https://github.com/kubepug/kubepug
     override-pull: |
       snapcraftctl pull
       last_committed_tag="$(git describe --tags --abbrev=0)"

@@ -18,7 +18,7 @@ ko:
 	LDFLAGS="$(LDFLAGS)" GIT_HASH=$(GIT_HASH) GIT_VERSION=$(GIT_VERSION) \
 	KO_DOCKER_REPO=${KO_PREFIX}/kubepug ko publish --bare --tags latest --tags $(GIT_VERSION) \
 		--platform=all --image-refs kubepugImagerefs \
-		github.com/rikatz/kubepug
+		github.com/kubepug/kubepug
 
 .PHONY: release
 release:

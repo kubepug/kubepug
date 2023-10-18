@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/results"
 )
 
 func Test_json_Output(t *testing.T) {

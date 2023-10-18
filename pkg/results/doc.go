@@ -2,4 +2,4 @@
 // the results of deprecated objects
 package results
 
-// import "github.com/rikatz/kubepug/pkg/results"
+// import "github.com/kubepug/kubepug/pkg/results"

@@ -25,7 +25,7 @@ import (
 	"flag"
 	"fmt"
 
-	deprecationsgenerator "github.com/rikatz/kubepug/generator/deprecations"
+	deprecationsgenerator "github.com/kubepug/kubepug/generator/deprecations"
 
 	"github.com/spf13/pflag"
 	"k8s.io/gengo/args"

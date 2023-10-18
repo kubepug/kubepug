@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	"github.com/rikatz/kubepug/lib"
-	"github.com/rikatz/kubepug/pkg/formatter"
+	"github.com/kubepug/kubepug/lib"
+	"github.com/kubepug/kubepug/pkg/formatter"
 
 	// Import the Kubernetes Authentication plugin
 	_ "k8s.io/client-go/plugin/pkg/client/auth"

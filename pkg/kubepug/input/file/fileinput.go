@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/rikatz/kubepug/pkg/errors"
-	"github.com/rikatz/kubepug/pkg/results"
-	"github.com/rikatz/kubepug/pkg/store"
-	"github.com/rikatz/kubepug/pkg/utils"
+	"github.com/kubepug/kubepug/pkg/errors"
+	"github.com/kubepug/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/store"
+	"github.com/kubepug/kubepug/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 

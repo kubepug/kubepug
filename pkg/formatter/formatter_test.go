@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/results"
 )
 
 var mockResult = results.Result{

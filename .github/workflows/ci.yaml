@@ -8,40 +8,6 @@ on:
       - '*'
 
 jobs:
-
-  build-docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
-        with:
-          go-version: '1.21'
-          check-latest: true
-
-      - name: Build
-        run: go build -o ./generator-bin -v generator/main.go
-
-      - name: Download and generate files
-        run: |
-          mkdir -p tmp
-          cd tmp
-          GOPATH=$(pwd) go get k8s.io/api
-          GOPATH=$(pwd) ../generator-bin -i k8s.io/api/./... -v 9 > ../docs/data/data.json
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
-      - uses: actions/cache@v3
-        with:
-          key: mkdocs-material-${{ env.cache_id }}
-          path: .cache
-          restore-keys: |
-            mkdocs-material-
-      - run: pip install -r docs/requirements.txt
-      - run: python docs/generate_table_md.py
-      - run: mkdocs build
-
   build:
     runs-on: ubuntu-latest
     steps:
