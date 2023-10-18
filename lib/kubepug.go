@@ -8,13 +8,13 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
-	"github.com/rikatz/kubepug/pkg/kubepug"
-	fileinput "github.com/rikatz/kubepug/pkg/kubepug/input/file"
-	k8sinput "github.com/rikatz/kubepug/pkg/kubepug/input/k8s"
-	"github.com/rikatz/kubepug/pkg/store"
-	"github.com/rikatz/kubepug/pkg/store/generatedstore"
+	"github.com/kubepug/kubepug/pkg/kubepug"
+	fileinput "github.com/kubepug/kubepug/pkg/kubepug/input/file"
+	k8sinput "github.com/kubepug/kubepug/pkg/kubepug/input/k8s"
+	"github.com/kubepug/kubepug/pkg/store"
+	"github.com/kubepug/kubepug/pkg/store/generatedstore"
 
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/results"
 )
 
 // Config configuration object for Kubepug

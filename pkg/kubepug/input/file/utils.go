@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/results"
 	log "github.com/sirupsen/logrus"
 
 	"sigs.k8s.io/yaml"

@@ -3,7 +3,7 @@ package kubepug
 import (
 	"testing"
 
-	mock "github.com/rikatz/kubepug/pkg/store/mock"
+	mock "github.com/kubepug/kubepug/pkg/store/mock"
 	"github.com/stretchr/testify/require"
 )
 

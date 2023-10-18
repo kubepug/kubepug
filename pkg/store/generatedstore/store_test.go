@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/Masterminds/semver/v3"
-	apis "github.com/rikatz/kubepug/pkg/apis/v1alpha1"
-	"github.com/rikatz/kubepug/pkg/store/mock"
+	apis "github.com/kubepug/kubepug/pkg/apis/v1alpha1"
+	"github.com/kubepug/kubepug/pkg/store/mock"
 	"github.com/stretchr/testify/require"
 )
 

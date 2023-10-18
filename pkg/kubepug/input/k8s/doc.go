@@ -2,4 +2,4 @@
 // from a Kubernetes Cluster
 package k8sinput
 
-// import "github.com/rikatz/kubepug/pkg/kubepug/input/k8s"
+// import "github.com/kubepug/kubepug/pkg/kubepug/input/k8s"

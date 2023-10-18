@@ -1,6 +1,6 @@
 package main
 
-import "github.com/rikatz/kubepug/cmd"
+import "github.com/kubepug/kubepug/cmd"
 
 func main() {
 	cmd.Execute()

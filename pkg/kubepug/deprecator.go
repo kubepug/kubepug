@@ -1,7 +1,7 @@
 package kubepug
 
 import (
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/results"
 )
 
 // Deprecator implements an interface for reading some sort of Input and comparing against the

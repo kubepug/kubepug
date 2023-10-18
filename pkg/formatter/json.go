@@ -3,7 +3,7 @@ package formatter
 import (
 	jsonencoding "encoding/json"
 
-	"github.com/rikatz/kubepug/pkg/results"
+	"github.com/kubepug/kubepug/pkg/results"
 )
 
 type json struct{}

@@ -1,7 +1,7 @@
 # Deprecations  AKA KubePug - Pre UpGrade (Checker)
-[![Build Status](https://github.com/rikatz/kubepug/actions/workflows/build.yml/badge.svg)](https://github.com/rikatz/kubepug/actions/workflows/build.yml)
+[![Build Status](https://github.com/kubepug/kubepug/actions/workflows/build.yml/badge.svg)](https://github.com/kubepug/kubepug/actions/workflows/build.yml)
 [![codecov](https://codecov.io/github/rikatz/kubepug/graph/badge.svg?token=BIAQ7JIYD1)](https://codecov.io/github/rikatz/kubepug)
-[![Go Report Card](https://goreportcard.com/badge/github.com/rikatz/kubepug)](https://goreportcard.com/report/github.com/rikatz/kubepug)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubepug/kubepug)](https://goreportcard.com/report/github.com/kubepug/kubepug)
 [![kubepug](https://snapcraft.io/kubepug/badge.svg)](https://snapcraft.io/kubepug)
 
 
@@ -35,7 +35,7 @@ Change the arguments in kubepug program (and Helm template!) as desired!
 
 ## How to Use it as a standalone program
 
-Download the correct version from [Releases](https://github.com/rikatz/kubepug/releases/latest) page.
+Download the correct version from [Releases](https://github.com/kubepug/kubepug/releases/latest) page.
 
 After that, the command can be used just as kubectl, but with the following flags:
 
@@ -60,7 +60,7 @@ Flags:
 
 #### Alternatively you can install using go install
 ```
-$ go install github.com/rikatz/kubepug@latest
+$ go install github.com/kubepug/kubepug@latest
 ```
 
 ### Checking a Kubernetes Cluster
@@ -119,7 +119,7 @@ Steps to follow:
 1. Clone/Download this repository, and build the container on `generator/` directory
 
 ```console
-git clone https://github.com/rikatz/kubepug
+git clone https://github.com/kubepug/kubepug
 docker build -t generator -f generator/Dockerfile generator
 ```
 

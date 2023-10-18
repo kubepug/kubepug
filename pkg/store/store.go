@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 
-	api "github.com/rikatz/kubepug/pkg/apis/v1alpha1"
+	api "github.com/kubepug/kubepug/pkg/apis/v1alpha1"
 )
 
 type DefinitionStorer interface {

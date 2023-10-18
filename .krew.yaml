@@ -5,7 +5,7 @@ metadata:
 spec:
   shortDescription: >-
     Checks for deprecated objects in a cluster
-  homepage: https://github.com/rikatz/kubepug
+  homepage: https://github.com/kubepug/kubepug
   caveats: |
     * By default, deprecations finds deprecated object relative to the current kubernetes
     master branch. To target a different kubernetes release, use the --k8s-version
@@ -24,23 +24,23 @@ spec:
       matchLabels:
         os: darwin
         arch: amd64
-    {{addURIAndSha "https://github.com/rikatz/kubepug/releases/download/{{ .TagName }}/kubepug_darwin_amd64.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/kubepug/kubepug/releases/download/{{ .TagName }}/kubepug_darwin_amd64.tar.gz" .TagName }}
     bin: "kubepug"
   - selector:
       matchLabels:
         os: darwin
         arch: arm64
-    {{addURIAndSha "https://github.com/rikatz/kubepug/releases/download/{{ .TagName }}/kubepug_darwin_arm64.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/kubepug/kubepug/releases/download/{{ .TagName }}/kubepug_darwin_arm64.tar.gz" .TagName }}
     bin: "kubepug"
   - selector:
       matchLabels:
         os: linux
         arch: amd64
-    {{addURIAndSha "https://github.com/rikatz/kubepug/releases/download/{{ .TagName }}/kubepug_linux_amd64.tar.gz" .TagName }}
+    {{addURIAndSha "https://github.com/kubepug/kubepug/releases/download/{{ .TagName }}/kubepug_linux_amd64.tar.gz" .TagName }}
     bin: "kubepug"
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    {{addURIAndSha "https://github.com/rikatz/kubepug/releases/download/{{ .TagName }}/kubepug_windows_amd64.zip" .TagName }}
+    {{addURIAndSha "https://github.com/kubepug/kubepug/releases/download/{{ .TagName }}/kubepug_windows_amd64.zip" .TagName }}
     bin: "kubepug.exe"

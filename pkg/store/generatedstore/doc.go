@@ -2,4 +2,4 @@
 // based on Kubernetes APIs
 package generatedstore
 
-// import "github.com/rikatz/kubepug/pkg/store/generatedstore"
+// import "github.com/kubepug/kubepug/pkg/store/generatedstore"

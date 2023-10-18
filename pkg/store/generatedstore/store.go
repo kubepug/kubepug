@@ -7,10 +7,10 @@ import (
 	"os"
 
 	"github.com/Masterminds/semver/v3"
-	apis "github.com/rikatz/kubepug/pkg/apis/v1alpha1"
-	"github.com/rikatz/kubepug/pkg/utils"
+	apis "github.com/kubepug/kubepug/pkg/apis/v1alpha1"
+	"github.com/kubepug/kubepug/pkg/utils"
 
-	generatedapi "github.com/rikatz/kubepug/generator/deprecations"
+	generatedapi "github.com/kubepug/kubepug/generator/deprecations"
 
 	json "github.com/goccy/go-json"
 )

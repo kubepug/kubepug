@@ -1,6 +1,6 @@
 site_name: Kubepug - Kubernetes PreUpgrade API Deprecation checker
 site_url: "https://kubepug.xyz"
-repo_url: "https://github.com/rikatz/kubepug"
+repo_url: "https://github.com/kubepug/kubepug"
 plugins:
   - search
 extra_css:
