@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/mod v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.28.2
+	k8s.io/apimachinery v0.28.3
 	k8s.io/cli-runtime v0.28.2
 	k8s.io/client-go v0.28.2
 	k8s.io/gengo v0.0.0-20210813121822-485abfe95c7c
