@@ -11,12 +11,13 @@ import (
 
 const (
 	someRandomContent = "testing download"
+	dataJSON          = "/data.json"
 )
 
 func TestDownloadGeneratedJSON(t *testing.T) {
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/data.json" {
+			if r.URL.Path == dataJSON {
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(someRandomContent)) //nolint: errcheck
@@ -36,13 +37,13 @@ func TestDownloadGeneratedJSON(t *testing.T) {
 			require.NoError(t, err)
 		})
 		require.NoError(t, err)
-		f, err := DownloadGeneratedJSON(ts.URL + "/data.json")
+		f, err := DownloadGeneratedJSON(ts.URL + dataJSON)
 		require.Error(t, err)
 		require.Empty(t, f)
 	})
 
 	t.Run("download valid data", func(t *testing.T) {
-		f, err := DownloadGeneratedJSON(ts.URL + "/data.json")
+		f, err := DownloadGeneratedJSON(ts.URL + dataJSON)
 		require.NoError(t, err)
 		require.Contains(t, f, "kubepug")
 		require.Contains(t, f, "data.json")
@@ -61,7 +62,7 @@ func TestDownloadGeneratedJSON(t *testing.T) {
 	})
 
 	t.Run("try to create file on a forbidden place", func(t *testing.T) {
-		err := downloadFile("/tmp123/xpto", ts.URL+"/data.json")
+		err := downloadFile("/tmp123/xpto", ts.URL+dataJSON)
 		require.Error(t, err)
 	})
 }

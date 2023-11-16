@@ -36,7 +36,7 @@ import (
 // This is the comment tag that carries parameters for API status generation.  Because the cadence is fixed, we can predict
 // with near certainty when this lifecycle happens as the API is introduced.
 const (
-	tagEnabledName    = "k8s:prerelease-lifecycle-gen" //nolint: gosec
+	tagEnabledName    = "k8s:prerelease-lifecycle-gen"
 	introducedTagName = tagEnabledName + ":introduced"
 	deprecatedTagName = tagEnabledName + ":deprecated"
 	removedTagName    = tagEnabledName + ":removed"
@@ -206,13 +206,13 @@ func (r *APIRegistry) Packages(context *generator.Context, arguments *args.Gener
 
 		ptag, err := extractTag(tagEnabledName, pkg.Comments)
 		if err != nil {
-			klog.Fatalf("%w", err)
+			klog.Fatalf("%v", err)
 		}
 		pkgNeedsGeneration := false
 		if ptag != nil {
 			pkgNeedsGeneration, err = strconv.ParseBool(ptag.value)
 			if err != nil {
-				klog.Fatalf("Package %v: unsupported %s value: %q :%w", i, tagEnabledName, ptag.value, err)
+				klog.Fatalf("Package %v: unsupported %s value: %q :%v", i, tagEnabledName, ptag.value, err)
 			}
 		}
 		if !pkgNeedsGeneration {
@@ -229,7 +229,7 @@ func (r *APIRegistry) Packages(context *generator.Context, arguments *args.Gener
 				klog.V(5).Infof("  considering type %q", t.Name.String())
 				ttag, err := extractEnabledTypeTag(t)
 				if err != nil {
-					klog.Fatalf("%w", err)
+					klog.Fatalf("%v", err)
 				}
 				if ttag != nil && ttag.value == "true" {
 					klog.V(5).Infof("    tag=true")
