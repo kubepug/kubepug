@@ -36,69 +36,79 @@ var (
 func (f *stdout) Output(data results.Result) ([]byte, error) {
 	color.NoColor = f.plain
 
-	var s string
+	s := sliceBuilder{}
 	if len(data.DeprecatedAPIs) > 0 {
-		s = fmt.Sprintf("%s:\n%s:\n", resourceColor("RESULTS"), resourceColor("Deprecated APIs"))
+		s.add(resourceColor("RESULTS"), ":\n", resourceColor("Deprecated APIs"), ":\n")
 
 		for _, api := range data.DeprecatedAPIs {
-			s = fmt.Sprintf("%s%s found in %s/%s\n", s, resourceColor(api.Kind), gvColor(api.Group), gvColor(api.Version))
+			s.add(resourceColor(api.Kind), " found in ", gvColor(api.Group), "/", gvColor(api.Version), "\n")
 
 			if api.K8sVersion != "" && api.K8sVersion != "unknown" {
-				s = fmt.Sprintf("%s\t ├─ %s %s\n", s, namespaceColor("Deprecated at:"), api.K8sVersion)
+				s.add("\t ├─ ", namespaceColor("Deprecated at:"), " ", api.K8sVersion, "\n")
 			}
 
 			if api.Replacement != nil {
-				s = fmt.Sprintf("%s\t ├─ %s %s/%s/%s \n", s, namespaceColor("Replacement:"), api.Replacement.Group, api.Replacement.Version, api.Replacement.Kind)
+				s.add("\t ├─ ", namespaceColor("Replacement:"), " ", api.Replacement.Group, "/", api.Replacement.Version, "/", api.Replacement.Kind, "\n")
 			}
 
 			if api.Description != "" {
-				s = fmt.Sprintf("%s\t ├─ %s\n", s, strings.ReplaceAll(api.Description, "\n", ""))
+				s.add("\t ├─ ", strings.ReplaceAll(api.Description, "\n", ""), "\n")
 			}
 
-			items := stdoutListItems(api.Items)
-			s = fmt.Sprintf("%s%s\n", s, items)
+			s.addItems(api.Items)
 		}
 	}
 
 	if len(data.DeletedAPIs) > 0 {
-		s = fmt.Sprintf("%s\n%s:\n", s, resourceColor("Deleted APIs"))
-		s = fmt.Sprintf("%s\t %s\n", s, errorColor("APIs REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!"))
+		s.add("\n", resourceColor("Deleted APIs"), ":\n")
+		s.add("\t ", errorColor("APIs REMOVED FROM THE CURRENT VERSION AND SHOULD BE MIGRATED IMMEDIATELY!!"), "\n")
 
 		for _, api := range data.DeletedAPIs {
-			s = fmt.Sprintf("%s%s found in %s/%s\n", s, resourceColor(api.Kind), gvColor(api.Group), gvColor(api.Version))
+			s.add(resourceColor(api.Kind), " found in ", gvColor(api.Group), "/", gvColor(api.Version), "\n")
 
 			if api.K8sVersion != "" && api.K8sVersion != "unknown" {
-				s = fmt.Sprintf("%s\t ├─ %s %s\n", s, namespaceColor("Deleted at:"), api.K8sVersion)
+				s.add("\t ├─ ", namespaceColor("Deleted at:"), " ", api.K8sVersion, "\n")
 			}
 
 			if api.Replacement != nil {
-				s = fmt.Sprintf("%s\t ├─ %s %s/%s/%s \n", s, namespaceColor("Replacement:"), api.Replacement.Group, api.Replacement.Version, api.Replacement.Kind)
+				s.add("\t ├─ ", namespaceColor("Replacement:"), " ", api.Replacement.Group, "/", api.Replacement.Version, "/", api.Replacement.Kind, "\n")
 			}
 
 			if api.Description != "" {
-				s = fmt.Sprintf("%s\t ├─ %s\n", s, strings.ReplaceAll(api.Description, "\n", ""))
+				s.add("\t ├─ ", strings.ReplaceAll(api.Description, "\n", ""), "\n")
 			}
 
-			items := stdoutListItems(api.Items)
-			s = fmt.Sprintf("%s%s\n", s, items)
+			s.addItems(api.Items)
 		}
 	}
 
 	if len(data.DeletedAPIs) == 0 && len(data.DeprecatedAPIs) == 0 {
-		s = "\nNo deprecated or deleted APIs found"
+		s.add("\nNo deprecated or deleted APIs found")
 	}
 
-	s = fmt.Sprintf("%s\n\n%s\n", s, footer)
+	s.add("\n\n", footer, "\n")
 
+	out := s.String()
 	if f.plain {
-		s = strings.ReplaceAll(s, "\t", "")
+		out = strings.ReplaceAll(out, "\t", "")
 	}
 
-	return []byte(s), nil
+	return []byte(out), nil
 }
 
-func stdoutListItems(items []results.Item) string {
-	s := ""
+// sliceBuilder is a String Builder that accepts any number of strings at once for ergonomics.
+type sliceBuilder struct {
+	strings.Builder
+}
+
+func (b *sliceBuilder) add(strs ...string) {
+	for _, s := range strs {
+		// strings.Builder.WriteString() error is always nil and can be ignored.
+		b.WriteString(s)
+	}
+}
+
+func (b *sliceBuilder) addItems(items []results.Item) {
 	for _, i := range items {
 		var fileLocation string
 		if i.Location != "" {
@@ -110,11 +120,10 @@ func stdoutListItems(items []results.Item) string {
 				i.Namespace = metav1.NamespaceDefault
 			}
 
-			s = fmt.Sprintf("%s\t\t-> %s: %s %s %s %s\n", s, namespaceColor(i.Scope), i.ObjectName, namespaceColor("namespace:"), i.Namespace, fileLocation)
+			b.add("\t\t-> ", namespaceColor(i.Scope), ": ", i.ObjectName, " ", namespaceColor("namespace:"), " ", i.Namespace, " ", fileLocation, "\n")
 		} else {
-			s = fmt.Sprintf("%s\t\t-> %s: %s %s\n", s, globalColor(i.Scope), i.ObjectName, fileLocation)
+			b.add("\t\t-> ", globalColor(i.Scope), ": ", i.ObjectName, " ", fileLocation, "\n")
 		}
 	}
-
-	return s
+	b.add("\n")
 }
