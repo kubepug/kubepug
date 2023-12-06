@@ -9,7 +9,7 @@ LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 GOLANG_CI_LINT = $(LOCALBIN)/golangci-lint
-GOLANG_CI_LINT_VERSION ?= v1.54.2
+GOLANG_CI_LINT_VERSION := $(shell cat .github/workflows/lint.yml | grep [[:space:]]version: | sed 's/.*version: //')
 
 .PHONY: build
 build:
