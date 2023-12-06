@@ -5,6 +5,12 @@ PKG=sigs.k8s.io/release-utils/version
 LDFLAGS=-X $(PKG).gitVersion=$(GIT_VERSION)
 KO_PREFIX ?= ghcr.io/kubepug
 
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+GOLANG_CI_LINT = $(LOCALBIN)/golangci-lint
+GOLANG_CI_LINT_VERSION ?= v1.54.2
+
 .PHONY: build
 build:
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o ./output/kubepug .
@@ -12,6 +18,13 @@ build:
 .PHONY: test
 test:
 	go test ./... -coverprofile coverage.out -race -covermode=atomic
+
+.PHONY: lint
+lint:
+	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANG_CI_LINT_VERSION)
+	$(LOCALBIN)/golangci-lint run
+
+
 
 .PHONY: ko
 ko:
