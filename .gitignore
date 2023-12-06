@@ -8,6 +8,7 @@ files/*
 swagger-*
 output/*
 dist/*
+bin/*
 # Test binary, built with `go test -c`
 *.test
 
