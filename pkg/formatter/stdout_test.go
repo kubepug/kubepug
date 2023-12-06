@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// nolint: stylecheck
 const expected = `[31;1mRESULTS[0;22m:
 [31;1mDeprecated APIs[0;22m:
 [31;1mSomeKind[0;22m found in [90;1msomegroup[0;22m/[90;1mv3[0;22m
