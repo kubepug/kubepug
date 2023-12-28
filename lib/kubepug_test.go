@@ -12,6 +12,10 @@ import (
 	"k8s.io/utils/pointer"
 )
 
+const (
+	dataJSON = "/data.json"
+)
+
 func TestNewKubepug(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -65,7 +69,7 @@ func TestNewKubepug(t *testing.T) {
 func TestGetDeprecated(t *testing.T) {
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/data.json" {
+			if r.URL.Path == dataJSON {
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(mock.MockValidData)) //nolint: errcheck
@@ -123,7 +127,7 @@ func TestGetDeprecated(t *testing.T) {
 	t.Run("invalid file input should fail", func(t *testing.T) {
 		pug := &Kubepug{
 			Config: &Config{
-				GeneratedStore: ts.URL + "/data.json",
+				GeneratedStore: ts.URL + dataJSON,
 				K8sVersion:     "v1.22",
 				Input:          "/tmp123/lslslasd",
 			},
@@ -138,7 +142,7 @@ func TestGetDeprecated(t *testing.T) {
 	t.Run("empty k8s config should fail", func(t *testing.T) {
 		pug := &Kubepug{
 			Config: &Config{
-				GeneratedStore: ts.URL + "/data.json",
+				GeneratedStore: ts.URL + dataJSON,
 				K8sVersion:     "v1.22",
 			},
 		}
@@ -152,7 +156,7 @@ func TestGetDeprecated(t *testing.T) {
 	t.Run("bad k8s config should fail", func(t *testing.T) {
 		pug := &Kubepug{
 			Config: &Config{
-				GeneratedStore: ts.URL + "/data.json",
+				GeneratedStore: ts.URL + dataJSON,
 				K8sVersion:     "v1.22",
 				ConfigFlags: &genericclioptions.ConfigFlags{
 					KubeConfig: pointer.String("/blabla123/kconfig"),
