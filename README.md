@@ -9,8 +9,9 @@
 
 KubePug/Deprecations is intended to be a kubectl plugin, which:
 
-* Downloads a data.json generated containing Kubernetes APIs deprecation information
-* Verifies the current Kubernetes cluster or input files checking whether exists objects in this deprecated API Versions, allowing the user to check before migrating
+* Downloads a generated data.json file containing API deprecation information for a specified release of Kubernetes
+* Scans a running Kubernetes cluster to determine if any objects will be affected by deprication
+* Displays affected objects to the user
 
 ## Features
 * Can run against a Kubernetes cluster, using kubeconfig or the current cluster
@@ -43,9 +44,11 @@ After that, the command can be used just as kubectl, but with the following flag
 $ kubepug --help
 [...]
 Flags:
+      --as-uid string            UID to impersonate for the operation.
       --cluster string           The name of the kubeconfig cluster to use
       --context string           The name of the kubeconfig context to use
       --database string          Sets the generated database location. Can be remote file or local (default "https://kubepug.xyz/data/data.json")
+      --disable-compression      If true, opt-out of response compression for all requests to the server
       --error-on-deleted         If a deleted object is found, the program will exit with return code 1 instead of 0. Defaults to false
       --error-on-deprecated      If a deprecated object is found, the program will exit with return code 1 instead of 0. Defaults to false
       --filename string          Name of the file the results will be saved to, if empty it will display to stdout
