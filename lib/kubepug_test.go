@@ -9,7 +9,7 @@ import (
 	"github.com/kubepug/kubepug/pkg/store/mock"
 	"github.com/stretchr/testify/require"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -159,7 +159,7 @@ func TestGetDeprecated(t *testing.T) {
 				GeneratedStore: ts.URL + dataJSON,
 				K8sVersion:     "v1.22",
 				ConfigFlags: &genericclioptions.ConfigFlags{
-					KubeConfig: pointer.String("/blabla123/kconfig"),
+					KubeConfig: ptr.To("/blabla123/kconfig"),
 				},
 			},
 		}
