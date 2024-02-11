@@ -2,14 +2,14 @@ Kubepug is a program that helps you on your journey migrating between Kubernetes
 versions.
 
 Kubernetes [deprecates apis](https://kubernetes.io/docs/reference/using-api/deprecation-guide/) 
-between releases, and when upgrading the cluster, the admin may face some of this deprecations
+between releases, and when upgrading the cluster, the admin may face some of these deprecations
 and a need to migrate or remove some resources.
 
 Usually this API types are marked as `Deprecated` on a version and then `Deleted`
 on a future version, depending on the decided lifecycle.
 
 Kubepug can verify a Kubernetes cluster or manifests file, to check if some API 
-has been deprecated or deleted. It allows you to set against which version of 
+has been deprecated or deleted. It allows you to specify which version of 
 Kubernetes you want to check your manifests.
 
 ## Quick start

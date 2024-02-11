@@ -4,7 +4,7 @@ title: Installing Kubepug
 
 # Installing Kubepug
 
-Kubepug can be installed on some different ways:
+Kubepug can be installed in some different ways:
 
 !!! info "Additional installation methods"
 
