@@ -7,7 +7,7 @@ require (
 	github.com/fatih/color v1.17.0
 	github.com/goccy/go-json v0.10.3
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/mod v0.18.0
