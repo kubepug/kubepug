@@ -1,5 +1,5 @@
 project_name: kubepug
-
+version: 2
 env:
   - COSIGN_YES=true
 
@@ -24,7 +24,7 @@ builds:
       - s390x
       - ppc64le
     goarm:
-      - 7
+      - "7"
     ignore:
       - goos: windows
         goarch: arm64
@@ -49,13 +49,29 @@ signs:
     signature: "${artifact}.sig"
     certificate: "${artifact}.pem"
     cmd: cosign
-    args: ["sign-blob", "--output-signature", "${artifact}.sig", "--output-certificate", "${artifact}.pem", "${artifact}"]
+    args:
+      [
+        "sign-blob",
+        "--output-signature",
+        "${artifact}.sig",
+        "--output-certificate",
+        "${artifact}.pem",
+        "${artifact}",
+      ]
     artifacts: checksum
   - id: packages
     signature: "${artifact}.sig"
     certificate: "${artifact}.pem"
     cmd: cosign
-    args: ["sign-blob", "--output-signature", "${artifact}.sig", "--output-certificate", "${artifact}.pem", "${artifact}"]
+    args:
+      [
+        "sign-blob",
+        "--output-signature",
+        "${artifact}.sig",
+        "--output-certificate",
+        "${artifact}.pem",
+        "${artifact}",
+      ]
     artifacts: archive
 
 archives:
