@@ -28,28 +28,39 @@ import (
 	deprecationsgenerator "github.com/kubepug/kubepug/generator/deprecations"
 
 	"github.com/spf13/pflag"
-	"k8s.io/gengo/args"
+	"k8s.io/code-generator/cmd/prerelease-lifecycle-gen/args"
+	"k8s.io/gengo/v2"
+	"k8s.io/gengo/v2/generator"
 	"k8s.io/klog/v2"
 )
 
 func main() {
 	klog.InitFlags(nil)
 
-	genericArgs := args.Default().WithoutDefaultFlagParsing()
+	argsd := args.New()
 
-	genericArgs.AddFlags(pflag.CommandLine)
-	flag.Set("logtostderr", "true") //nolint: errcheck
+	argsd.AddFlags(pflag.CommandLine)
+	flag.Set("logtostderr", "true")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
 
-	regGenerator := deprecationsgenerator.NewAPIRegistry()
+	if err := argsd.Validate(); err != nil {
+		klog.Fatalf("Error: %v", err)
+	}
 
-	if err := genericArgs.Execute(
+	regGenerator := deprecationsgenerator.NewAPIRegistry()
+	myTargets := func(context *generator.Context) []generator.Target {
+		return regGenerator.GetTargets(context, argsd)
+	}
+
+	if err := gengo.Execute(
 		deprecationsgenerator.NameSystems(),
 		deprecationsgenerator.DefaultNameSystem(),
-		regGenerator.Packages,
+		myTargets,
+		gengo.StdBuildTag,
+		pflag.Args(),
 	); err != nil {
-		klog.Fatalf("Error: %v", err)
+		klog.Errorf("error generating some files, may have missing status: %s", err)
 	}
 
 	registries := regGenerator.Registry()

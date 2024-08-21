@@ -8,6 +8,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/fatih/color v1.17.0
 	github.com/goccy/go-json v0.10.3
+	github.com/google/go-cmp v0.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
@@ -17,7 +18,8 @@ require (
 	k8s.io/apimachinery v0.31.0
 	k8s.io/cli-runtime v0.31.0
 	k8s.io/client-go v0.31.0
-	k8s.io/gengo v0.0.0-20230829151522-9cce18d56c01
+	k8s.io/code-generator v0.31.0
+	k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
 	sigs.k8s.io/release-utils v0.8.4
@@ -40,7 +42,6 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect

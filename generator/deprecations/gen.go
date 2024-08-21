@@ -19,16 +19,16 @@ package deprecations
 import (
 	"fmt"
 	"io"
-	"path/filepath"
+	"path"
+	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
-	"k8s.io/gengo/args"
-	"k8s.io/gengo/examples/set-gen/sets"
-	"k8s.io/gengo/generator"
-	"k8s.io/gengo/namer"
-	"k8s.io/gengo/types"
+	"k8s.io/code-generator/cmd/prerelease-lifecycle-gen/args"
+	"k8s.io/gengo/v2"
+	"k8s.io/gengo/v2/generator"
+	"k8s.io/gengo/v2/namer"
+	"k8s.io/gengo/v2/types"
 
 	"k8s.io/klog/v2"
 )
@@ -44,54 +44,31 @@ const (
 	replacementTagName = tagEnabledName + ":replacement"
 )
 
-type APIRegistry struct {
-	registry []APIDeprecation
-	mu       sync.Mutex
-}
-
-func NewAPIRegistry() *APIRegistry {
-	regMap := make([]APIDeprecation, 0)
-	return &APIRegistry{
-		registry: regMap,
-		mu:       sync.Mutex{},
-	}
-}
-
-func (r *APIRegistry) Registry() []APIDeprecation {
-	return r.registry
-}
-
 // enabledTagValue holds parameters from a tagName tag.
 type tagValue struct {
 	value string
 }
 
-func extractEnabledTypeTag(t *types.Type) (*tagValue, error) {
+func extractEnabledTypeTag(t *types.Type) *tagValue {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
 	return extractTag(tagEnabledName, comments)
 }
 
-func tagExists(tagName string, t *types.Type) (bool, error) {
+func tagExists(tagName string, t *types.Type) bool {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
-	rawTag, err := extractTag(tagName, comments)
-	if err != nil {
-		return false, err
-	}
-	return rawTag != nil, nil
+	rawTag := extractTag(tagName, comments)
+	return rawTag != nil
 }
 
-func extractKubeVersionTag(tagName string, t *types.Type) (value *tagValue, majorversion, minorversion int, err error) {
+func extractKubeVersionTag(tagName string, t *types.Type) (*tagValue, int, int, error) {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
-	rawTag, err := extractTag(tagName, comments)
-	if err != nil {
-		return nil, -1, -1, err
-	}
-	if rawTag == nil || rawTag.value == "" {
+	rawTag := extractTag(tagName, comments)
+	if rawTag == nil || len(rawTag.value) == 0 {
 		return nil, -1, -1, fmt.Errorf("%v missing %v=Version tag", t, tagName)
 	}
 
 	splitValue := strings.Split(rawTag.value, ".")
-	if len(splitValue) != 2 || splitValue[0] == "" || splitValue[1] == "" {
+	if len(splitValue) != 2 || len(splitValue[0]) == 0 || len(splitValue[1]) == 0 {
 		return nil, -1, -1, fmt.Errorf("%v format must match %v=xx.yy tag", t, tagName)
 	}
 	major, err := strconv.ParseInt(splitValue[0], 10, 32)
@@ -106,22 +83,22 @@ func extractKubeVersionTag(tagName string, t *types.Type) (value *tagValue, majo
 	return rawTag, int(major), int(minor), nil
 }
 
-func extractIntroducedTag(t *types.Type) (value *tagValue, major, minor int, err error) {
+func extractIntroducedTag(t *types.Type) (*tagValue, int, int, error) {
 	return extractKubeVersionTag(introducedTagName, t)
 }
 
-func extractDeprecatedTag(t *types.Type) (value *tagValue, major, minor int, err error) {
+func extractDeprecatedTag(t *types.Type) (*tagValue, int, int, error) {
 	return extractKubeVersionTag(deprecatedTagName, t)
 }
 
-func extractRemovedTag(t *types.Type) (value *tagValue, major, minor int, err error) {
+func extractRemovedTag(t *types.Type) (*tagValue, int, int, error) {
 	return extractKubeVersionTag(removedTagName, t)
 }
 
 func extractReplacementTag(t *types.Type) (group, version, kind string, hasReplacement bool, err error) {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
 
-	tagVals := types.ExtractCommentTags("+", comments)[replacementTagName]
+	tagVals := gengo.ExtractCommentTags("+", comments)[replacementTagName]
 	if len(tagVals) == 0 {
 		// No match for the tag.
 		return "", "", "", false, nil
@@ -136,7 +113,7 @@ func extractReplacementTag(t *types.Type) (group, version, kind string, hasRepla
 		return "", "", "", false, fmt.Errorf(`%s value must be "<group>,<version>,<kind>", got %q`, replacementTagName, tagValue)
 	}
 	group, version, kind = parts[0], parts[1], parts[2]
-	if version == "" || kind == "" {
+	if len(version) == 0 || len(kind) == 0 {
 		return "", "", "", false, fmt.Errorf(`%s value must be "<group>,<version>,<kind>", got %q`, replacementTagName, tagValue)
 	}
 	// sanity check the group
@@ -154,15 +131,15 @@ func extractReplacementTag(t *types.Type) (group, version, kind string, hasRepla
 	return group, version, kind, true, nil
 }
 
-func extractTag(tagName string, comments []string) (*tagValue, error) {
-	tagVals := types.ExtractCommentTags("+", comments)[tagName]
+func extractTag(tagName string, comments []string) *tagValue {
+	tagVals := gengo.ExtractCommentTags("+", comments)[tagName]
 	if tagVals == nil {
 		// No match for the tag.
-		return nil, nil
+		return nil
 	}
 	// If there are multiple values, abort.
 	if len(tagVals) > 1 {
-		return nil, fmt.Errorf("found %d %s tags: %q", len(tagVals), tagName, tagVals)
+		klog.Fatalf("Found %d %s tags: %q", len(tagVals), tagName, tagVals)
 	}
 
 	// If we got here we are returning something.
@@ -174,7 +151,16 @@ func extractTag(tagName string, comments []string) (*tagValue, error) {
 		tag.value = parts[0]
 	}
 
-	return tag, nil
+	// Parse extra arguments.
+	parts = parts[1:]
+	for i := range parts {
+		kv := strings.SplitN(parts[i], "=", 2)
+		k := kv[0]
+		if k != "" {
+			klog.Fatalf("Unsupported %s param: %q", tagName, parts[i])
+		}
+	}
+	return tag
 }
 
 // NameSystems returns the name system used by the generators in this package.
@@ -191,23 +177,22 @@ func DefaultNameSystem() string {
 	return "public"
 }
 
-// Packages makes the package definition.
-func (r *APIRegistry) Packages(context *generator.Context, arguments *args.GeneratorArgs) generator.Packages {
-	inputs := sets.NewString(context.Inputs...)
-	packages := generator.Packages{}
+// GetTargets makes the target definition.
+// (rkatz) changed to add the right call for json map call
+func (r *APIRegistry) GetTargets(context *generator.Context, args *args.Args) []generator.Target {
+	boilerplate, err := gengo.GoBoilerplate(args.GoHeaderFile, gengo.StdBuildTag, gengo.StdGeneratedBy)
+	if err != nil {
+		klog.Fatalf("Failed loading boilerplate: %v", err)
+	}
 
-	for i := range inputs {
+	targets := []generator.Target{}
+
+	for _, i := range context.Inputs {
 		klog.V(5).Infof("Considering pkg %q", i)
-		pkg := context.Universe[i]
-		if pkg == nil {
-			// If the input had no Go files, for example.
-			continue
-		}
 
-		ptag, err := extractTag(tagEnabledName, pkg.Comments)
-		if err != nil {
-			klog.Fatalf("%v", err)
-		}
+		pkg := context.Universe[i]
+
+		ptag := extractTag(tagEnabledName, pkg.Comments)
 		pkgNeedsGeneration := false
 		if ptag != nil {
 			pkgNeedsGeneration, err = strconv.ParseBool(ptag.value)
@@ -227,14 +212,11 @@ func (r *APIRegistry) Packages(context *generator.Context, arguments *args.Gener
 			// explicitly wants generation.
 			for _, t := range pkg.Types {
 				klog.V(5).Infof("  considering type %q", t.Name.String())
-				ttag, err := extractEnabledTypeTag(t)
-				if err != nil {
-					klog.Fatalf("%v", err)
-				}
+				ttag := extractEnabledTypeTag(t)
 				if ttag != nil && ttag.value == "true" {
 					klog.V(5).Infof("    tag=true")
 					if !isAPIType(t) {
-						klog.Fatalf("Type %v requests deepcopy generation but is not copyable", t)
+						klog.Fatalf("Type %v requests prerelease generation but is not an API type", t)
 					}
 					pkgNeedsGeneration = true
 					break
@@ -243,22 +225,7 @@ func (r *APIRegistry) Packages(context *generator.Context, arguments *args.Gener
 		}
 
 		if pkgNeedsGeneration {
-			path := pkg.Path
-			// if the source path is within a /vendor/ directory (for example,
-			// k8s.io/kubernetes/vendor/k8s.io/apimachinery/pkg/apis/meta/v1), allow
-			// generation to output to the proper relative path (under vendor).
-			// Otherwise, the generator will create the file in the wrong location
-			// in the output directory.
-			// TODO: build a more fundamental concept in gengo for dealing with modifications
-			// to vendored packages.
-			if strings.HasPrefix(pkg.SourcePath, arguments.OutputBase) {
-				expandedPath := strings.TrimPrefix(pkg.SourcePath, arguments.OutputBase)
-				if strings.Contains(expandedPath, "/vendor/") {
-					path = expandedPath
-				}
-			}
-
-			// the group is always, at least on K8s api, a constant called GroupName
+			/* Added by Ricardo to get the right info */
 			apigroupType, ok := pkg.Constants["GroupName"]
 			if !ok {
 				// We cannot add a deprecated API without knowing its group
@@ -272,51 +239,40 @@ func (r *APIRegistry) Packages(context *generator.Context, arguments *args.Gener
 			// Usually the package name should be the version
 			apiversion := pkg.Name
 
-			packages = append(packages,
-				&generator.DefaultPackage{
-					PackageName: strings.Split(filepath.Base(pkg.Path), ".")[0],
-					PackagePath: path,
-					// HeaderText:  header,
-					GeneratorFunc: func(c *generator.Context) (generators []generator.Generator) {
-						return []generator.Generator{
-							r.NewDeprecatedDefinitionsGen(arguments.OutputFileBaseName, pkg.Path, apigroup, apiversion),
-						}
-					},
+			targets = append(targets,
+				&generator.SimpleTarget{
+					PkgName:       strings.Split(path.Base(pkg.Path), ".")[0],
+					PkgPath:       pkg.Path,
+					PkgDir:        pkg.Dir, // output pkg is the same as the input
+					HeaderComment: boilerplate,
 					FilterFunc: func(c *generator.Context, t *types.Type) bool {
 						return t.Name.Package == pkg.Path
+					},
+					GeneratorsFunc: func(c *generator.Context) (generators []generator.Generator) {
+						return []generator.Generator{
+							r.NewDeprecatedDefinitionsGen(pkg.Path, apigroup, apiversion), // (rkatz) - Changed to make this work fine
+						}
 					},
 				})
 		}
 	}
-	return packages
-}
-
-type genDeprecatedDefinitions struct {
-	generator.DefaultGen
-	targetPackage string
-	group         string
-	version       string
-	imports       namer.ImportTracker
-	typesForInit  []*types.Type
-	registry      *APIRegistry
+	return targets
 }
 
 // NewPrereleaseLifecycleGen creates a generator for the prerelease-lifecycle-generator
-func (r *APIRegistry) NewDeprecatedDefinitionsGen(sanitizedName, targetPackage, group, version string) generator.Generator {
-	return &genDeprecatedDefinitions{
-		DefaultGen: generator.DefaultGen{
-			OptionalName: sanitizedName,
+func NewPrereleaseLifecycleGen(outputFilename, targetPackage string) generator.Generator {
+	return &genPreleaseLifecycle{
+		GoGenerator: generator.GoGenerator{
+			OutputFilename: outputFilename,
 		},
 		targetPackage: targetPackage,
 		imports:       generator.NewImportTracker(),
 		typesForInit:  make([]*types.Type, 0),
-		group:         group,
-		version:       version,
-		registry:      r,
 	}
 }
 
-func (g *genDeprecatedDefinitions) Namers(_ *generator.Context) namer.NameSystems {
+// genDeepCopy produces a file with autogenerated deep-copy functions.
+func (g *genPreleaseLifecycle) Namers(c *generator.Context) namer.NameSystems {
 	return namer.NameSystems{
 		"public":       namer.NewPublicNamer(1),
 		"intrapackage": namer.NewPublicNamer(0),
@@ -324,7 +280,7 @@ func (g *genDeprecatedDefinitions) Namers(_ *generator.Context) namer.NameSystem
 	}
 }
 
-func (g *genDeprecatedDefinitions) Filter(_ *generator.Context, t *types.Type) bool {
+func (g *genPreleaseLifecycle) Filter(c *generator.Context, t *types.Type) bool {
 	// Filter out types not being processed or not copyable within the package.
 	if !isAPIType(t) {
 		klog.V(2).Infof("Type %v is not a valid target for status", t)
@@ -332,6 +288,44 @@ func (g *genDeprecatedDefinitions) Filter(_ *generator.Context, t *types.Type) b
 	}
 	g.typesForInit = append(g.typesForInit, t)
 	return true
+}
+
+// versionMethod returns the signature of an <methodName>() method, nil or an error
+// if the type is wrong. Introduced() allows more efficient deep copy
+// implementations to be defined by the type's author.  The correct signature
+//
+//	func (t *T) <methodName>() string
+func versionMethod(methodName string, t *types.Type) (*types.Signature, error) {
+	f, found := t.Methods[methodName]
+	if !found {
+		return nil, nil
+	}
+	if len(f.Signature.Parameters) != 0 {
+		return nil, fmt.Errorf("type %v: invalid  %v signature, expected no parameters", t, methodName)
+	}
+	if len(f.Signature.Results) != 2 {
+		return nil, fmt.Errorf("type %v: invalid  %v signature, expected exactly two result types", t, methodName)
+	}
+
+	ptrRcvr := f.Signature.Receiver != nil && f.Signature.Receiver.Kind == types.Pointer && f.Signature.Receiver.Elem.Name == t.Name
+	nonPtrRcvr := f.Signature.Receiver != nil && f.Signature.Receiver.Name == t.Name
+
+	if !ptrRcvr && !nonPtrRcvr {
+		// this should never happen
+		return nil, fmt.Errorf("type %v: invalid %v signature, expected a receiver of type %s or *%s", t, methodName, t.Name.Name, t.Name.Name)
+	}
+
+	return f.Signature, nil
+}
+
+// versionedMethodOrDie returns the signature of a <methodName>() method, nil or calls klog.Fatalf
+// if the type is wrong.
+func versionedMethodOrDie(methodName string, t *types.Type) *types.Signature {
+	ret, err := versionMethod(methodName, t)
+	if err != nil {
+		klog.Fatal(err)
+	}
+	return ret
 }
 
 // isAPIType indicates whether or not a type could be used to serve an API.  That means, "does it have TypeMeta".
@@ -359,7 +353,7 @@ func isAPIType(t *types.Type) bool {
 	return false
 }
 
-func (g *genDeprecatedDefinitions) isOtherPackage(pkg string) bool {
+func (g *genPreleaseLifecycle) isOtherPackage(pkg string) bool {
 	if pkg == g.targetPackage {
 		return false
 	}
@@ -369,7 +363,7 @@ func (g *genDeprecatedDefinitions) isOtherPackage(pkg string) bool {
 	return true
 }
 
-func (g *genDeprecatedDefinitions) Imports(_ *generator.Context) (imports []string) {
+func (g *genPreleaseLifecycle) Imports(c *generator.Context) (imports []string) {
 	importLines := []string{}
 	for _, singleImport := range g.imports.ImportLines() {
 		if g.isOtherPackage(singleImport) {
@@ -379,94 +373,8 @@ func (g *genDeprecatedDefinitions) Imports(_ *generator.Context) (imports []stri
 	return importLines
 }
 
-func (g *genDeprecatedDefinitions) argsFromType(_ *generator.Context, t *types.Type) (*APIDeprecation, error) {
-	_, introducedMajor, introducedMinor, err := extractIntroducedTag(t)
-	if err != nil {
-		return nil, err
-	}
+var isGAVersionRegex = regexp.MustCompile(`^v\d+$`)
 
-	// compute based on our policy
-	deprecatedMajor := introducedMajor
-	deprecatedMinor := introducedMinor + 3
-	// if someone intentionally override the deprecation release
-	exists, err := tagExists(deprecatedTagName, t)
-	if err != nil {
-		return nil, err
-	}
-	if exists {
-		_, deprecatedMajor, deprecatedMinor, err = extractDeprecatedTag(t)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// compute based on our policy
-	removedMajor := deprecatedMajor
-	removedMinor := deprecatedMinor + 3
-	// if someone intentionally override the removed release
-	exists, err = tagExists(removedTagName, t)
-	if err != nil {
-		return nil, err
-	}
-	if exists {
-		_, removedMajor, removedMinor, err = extractRemovedTag(t)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	replacementGroup, replacementVersion, replacementKind, hasReplacement, err := extractReplacementTag(t)
-	if err != nil {
-		return nil, err
-	}
-
-	reg := APIDeprecation{
-		IntroducedVersion: Version{
-			VersionMajor: introducedMajor,
-			VersionMinor: introducedMinor,
-		},
-		DeprecatedVersion: Version{
-			VersionMajor: deprecatedMajor,
-			VersionMinor: deprecatedMinor,
-		},
-		RemovedVersion: Version{
-			VersionMajor: removedMajor,
-			VersionMinor: removedMinor,
-		},
-	}
-
-	if hasReplacement {
-		reg.Replacement = GroupVersionKind{
-			Group:   replacementGroup,
-			Version: replacementVersion,
-			Kind:    replacementKind,
-		}
-	}
-
-	return &reg, nil
-}
-
-func (g *genDeprecatedDefinitions) Init(_ *generator.Context, _ io.Writer) error {
-	return nil
-}
-
-func (g *genDeprecatedDefinitions) GenerateType(c *generator.Context, t *types.Type, _ io.Writer) error {
-	klog.V(3).Infof("Generating deprecation definitions for type %v", t)
-
-	reg, err := g.argsFromType(c, t)
-	if err != nil {
-		return err
-	}
-
-	reg.Description = strings.Join(t.CommentLines, "\n")
-
-	reg.Group = g.group
-	reg.Version = g.version
-	reg.Kind = t.Name.Name
-
-	g.registry.mu.Lock()
-	defer g.registry.mu.Unlock()
-
-	g.registry.registry = append(g.registry.registry, *reg)
+func (g *genPreleaseLifecycle) Init(c *generator.Context, w io.Writer) error {
 	return nil
 }
