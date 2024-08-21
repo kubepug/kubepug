@@ -1,8 +1,10 @@
 ---
 run:
   concurrency: 6
-  deadline: 5m
 issues:
+  exclude-dirs:
+  - generator/*
+  - generator/deprecations/*
   exclude-rules:
     # counterfeiter fakes are usually named 'fake_<something>.go'
     - path: fake_.*\.go
