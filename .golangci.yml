@@ -1,6 +1,7 @@
 ---
 run:
   concurrency: 6
+  timeout: 10m
 issues:
   exclude-dirs:
   - generator/*
