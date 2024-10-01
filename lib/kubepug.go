@@ -11,10 +11,9 @@ import (
 	"github.com/kubepug/kubepug/pkg/kubepug"
 	fileinput "github.com/kubepug/kubepug/pkg/kubepug/input/file"
 	k8sinput "github.com/kubepug/kubepug/pkg/kubepug/input/k8s"
+	"github.com/kubepug/kubepug/pkg/results"
 	"github.com/kubepug/kubepug/pkg/store"
 	"github.com/kubepug/kubepug/pkg/store/generatedstore"
-
-	"github.com/kubepug/kubepug/pkg/results"
 )
 
 // Config configuration object for Kubepug
@@ -61,7 +60,6 @@ func (k *Kubepug) GetDeprecated() (result *results.Result, err error) {
 		Path:       k.Config.GeneratedStore,
 		MinVersion: k.Config.K8sVersion,
 	})
-
 	if err != nil {
 		return nil, err
 	}
