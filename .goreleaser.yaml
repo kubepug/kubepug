@@ -1,5 +1,6 @@
 project_name: kubepug
 version: 2
+
 env:
   - COSIGN_YES=true
 
