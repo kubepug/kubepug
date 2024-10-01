@@ -3,7 +3,7 @@ module github.com/kubepug/kubepug
 go 1.23
 
 require (
-	github.com/Masterminds/semver/v3 v3.2.1
+	github.com/Masterminds/semver/v3 v3.3.0
 	github.com/fatih/color v1.17.0
 	github.com/goccy/go-json v0.10.3
 	github.com/google/go-cmp v0.6.0
