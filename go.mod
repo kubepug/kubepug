@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/fatih/color v1.18.0
-	github.com/goccy/go-json v0.10.3
+	github.com/goccy/go-json v0.10.4
 	github.com/google/go-cmp v0.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
