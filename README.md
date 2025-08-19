@@ -10,7 +10,7 @@
 KubePug/Deprecations is intended to be a kubectl plugin, which:
 
 * Downloads a generated data.json file containing API deprecation information for a specified release of Kubernetes
-* Scans a running Kubernetes cluster to determine if any objects will be affected by deprication
+* Scans a running Kubernetes cluster to determine if any objects will be affected by deprecation
 * Displays affected objects to the user
 
 ## Features
