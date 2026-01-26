@@ -8,8 +8,8 @@ require (
 	github.com/goccy/go-json v0.10.5
 	github.com/google/go-cmp v0.7.0
 	github.com/sirupsen/logrus v1.9.4
-	github.com/spf13/cobra v1.9.1
-	github.com/spf13/pflag v1.0.7
+	github.com/spf13/cobra v1.10.2
+	github.com/spf13/pflag v1.0.9
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/mod v0.27.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -64,7 +64,7 @@ require (
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
-	go.yaml.in/yaml/v3 v3.0.3 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
